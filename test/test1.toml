@@ -1,0 +1,21 @@
+[log]
+file = '/path/to/file'
+level = 'info'                     # crit, error, warn, info, debug
+
+[incoming]
+port = 1080
+addresses = ['127.0.0.1']          # List of listening IP addresses
+allow_from = ['10.0.0.0/8', '192.168.1.1']
+
+[outgoing]
+allow_sites = [                    # List of FQDN to be granted.
+    "www.amazon.com",              # exact match
+    ".google.com",                 # subdomain match
+]
+deny_sites = [                     # List of FQDN to be denied.
+    ".2ch.net",                    # subdomain match
+    "bad.google.com",              # deny a domain of *.google.com
+]
+deny_ports = [22, 25]              # Black list of outbound ports
+addresses = ['12.34.56.78']        # List of source IP addresses
+dnsbl_domain = 'zen.spamhaus.org'  # to exclude black listed IP addresses
