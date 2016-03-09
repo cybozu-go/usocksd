@@ -4,8 +4,31 @@
 Micro SOCKS5 server
 ===================
 
-`usocksd` is a SOCKS5 server written in Go.
+**usocksd** is a SOCKS5 server written in Go.
 It is based on [armon/go-socks5][armon] server framework.
+
+Features
+--------
+
+* Multiple external IP addresses
+
+    usocksd can be configured to use multiple external IP addresses
+    for outgoing connections.
+
+    usocksd keeps using the same external IP address for a client
+    as much as possible.  This means usocksd can proxy passive FTP
+    connections reliably.
+
+    Moreover, you can use a [DNSBL][] service to exclude dynamically
+    from using some undesirable external IP addresses.
+
+* White- and black- list of sites
+
+    usocksd can be configured to grant access to the sites listed
+    in a white list, and/or to deny access to the sites listed in a
+    black list.
+
+    usocksd can block connections to specific TCP ports, too.
 
 Usage
 -----
@@ -14,7 +37,7 @@ Usage
 
 The default configuration file path is `/usr/local/etc/usocksd.toml`.
 
-`usocksd` does not have *daemon* mode.  Use systemd or upstart to
+usocksd does not have *daemon* mode.  Use systemd or upstart to
 run it on your background.
 
 Install
@@ -64,5 +87,6 @@ License
 [MIT](https://opensource.org/licenses/MIT)
 
 [armon]: https://github.com/armon/go-socks5/
+[DNSBL]: https://en.wikipedia.org/wiki/DNSBL
 [TOML]: https://github.com/toml-lang/toml
 [godoc]: https://godoc.org/github.com/cybozu-go/usocksd
