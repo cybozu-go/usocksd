@@ -4,17 +4,19 @@ import (
 	"fmt"
 	_log "log"
 
-	socks5 "github.com/armon/go-socks5"
+	socks5 "github.com/cybozu-go/go-socks5"
 	"github.com/cybozu-go/log"
 )
 
 func ListenAndServe(c *Config) error {
 	logger := _log.New(log.DefaultLogger().Writer(log.LvError), "", 0)
+	var rewriter rewrite
 
 	socksConfig := &socks5.Config{
-		Rules:  CreateRuleSet(c),
-		Logger: logger,
-		Dial:   CreateDialer(c),
+		Rules:    CreateRuleSet(c),
+		Rewriter: rewriter,
+		Logger:   logger,
+		Dial:     CreateDialer(c),
 	}
 	s, err := socks5.New(socksConfig)
 	if err != nil {
