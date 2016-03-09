@@ -22,10 +22,9 @@ type AddressGroup struct {
 	addresses   []net.IP // immutable
 	dnsblDomain string
 
-	lock      *sync.Mutex
-	valids    []net.IP
-	invalids  []net.IP
-	lastIndex int
+	lock     *sync.Mutex
+	valids   []net.IP
+	invalids []net.IP
 }
 
 func makeDNSBLDomain(domain string, ip net.IP) string {
@@ -81,23 +80,18 @@ func (a *AddressGroup) detectInvalid() {
 		}
 		a.valids = valids
 		a.invalids = invalids
-		a.lastIndex = 0
 		a.lock.Unlock()
 		time.Sleep(invalidCheckInterval)
 	}
 }
 
 // PickAddress returns a local IP address for outgoing connection.
-func (a *AddressGroup) PickAddress() net.IP {
+// hint should be an integer calculated from client and/or target IP addresses.
+func (a *AddressGroup) PickAddress(hint uint32) net.IP {
 	a.lock.Lock()
 	defer a.lock.Unlock()
 
-	ip := a.valids[a.lastIndex]
-	a.lastIndex++
-	if a.lastIndex == len(a.valids) {
-		a.lastIndex = 0
-	}
-	return ip
+	return a.valids[int(hint)%len(a.valids)]
 }
 
 // NewAddressGroup initializes a new AddressGroup and starts
@@ -109,7 +103,6 @@ func NewAddressGroup(addresses []net.IP, dnsblDomain string) *AddressGroup {
 		lock:        new(sync.Mutex),
 		valids:      addresses,
 		invalids:    nil,
-		lastIndex:   0,
 	}
 	go a.detectInvalid()
 	return a

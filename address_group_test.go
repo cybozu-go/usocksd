@@ -1,6 +1,7 @@
 package usocksd
 
 import (
+	"fmt"
 	"net"
 	"sync"
 	"testing"
@@ -33,21 +34,27 @@ func TestIsBadIP(t *testing.T) {
 func TestPick(t *testing.T) {
 	t.Parallel()
 
+	ip1 := net.ParseIP("12.34.56.78")
+	ip2 := net.ParseIP("10.0.0.1")
 	a := &AddressGroup{
-		lock: new(sync.Mutex),
-		valids: []net.IP{
-			net.ParseIP("12.34.56.78"),
-			net.ParseIP("10.0.0.1"),
-		},
+		lock:   new(sync.Mutex),
+		valids: []net.IP{ip1, ip2},
 	}
 
-	if ip := a.PickAddress(); ip.String() != "12.34.56.78" {
-		t.Error(ip.String() + " != 12.34.56.78")
+	validate := func(ip net.IP) error {
+		if !ip.Equal(ip1) && !ip.Equal(ip2) {
+			return fmt.Errorf("invalid IP: %v", ip)
+		}
+		return nil
 	}
-	if ip := a.PickAddress(); ip.String() != "10.0.0.1" {
-		t.Error(ip.String() + " != 10.0.0.1")
+
+	if err := validate(a.PickAddress(0)); err != nil {
+		t.Error(err)
 	}
-	if ip := a.PickAddress(); ip.String() != "12.34.56.78" {
-		t.Error(ip.String() + " != 12.34.56.78")
+	if err := validate(a.PickAddress(1)); err != nil {
+		t.Error(err)
+	}
+	if err := validate(a.PickAddress(2)); err != nil {
+		t.Error(err)
 	}
 }
