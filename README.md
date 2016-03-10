@@ -81,6 +81,11 @@ addresses = ["12.34.56.78"]        # List of source IP addresses
 dnsbl_domain = "some.dnsbl.org"    # to exclude black listed IP addresses
 ```
 
+Tuning
+------
+
+If you see usocksd consumes too much CPU, try setting [`GOGC`][GOGC] to higher value, say **300**.
+
 License
 -------
 
@@ -90,3 +95,4 @@ License
 [DNSBL]: https://en.wikipedia.org/wiki/DNSBL
 [TOML]: https://github.com/toml-lang/toml
 [godoc]: https://godoc.org/github.com/cybozu-go/usocksd
+[GOGC]: https://golang.org/pkg/runtime/#pkg-overview
