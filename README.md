@@ -46,8 +46,7 @@ Install
 Use Go 1.5 or better.
 
 ```
-go get github.com/cybozu-go/usocksd
-go install github.com/cybozu-go/usocksd/cmd/usocksd
+go get github.com/cybozu-go/usocksd/cmd/usocksd
 ```
 
 Configuration file format
