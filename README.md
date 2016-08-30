@@ -1,14 +1,34 @@
-[![GoDoc](https://godoc.org/github.com/cybozu-go/usocksd?status.png)][godoc]
-[![Build Status](https://travis-ci.org/cybozu-go/usocksd.png)](https://travis-ci.org/cybozu-go/usocksd)
+[![GitHub release](https://img.shields.io/github/release/cybozu-go/usocksd.svg?maxAge=60)][releases]
+[![GoDoc](https://godoc.org/github.com/cybozu-go/usocksd?status.svg)][godoc]
+[![Build Status](https://travis-ci.org/cybozu-go/usocksd.svg?branch=master)](https://travis-ci.org/cybozu-go/usocksd)
+[![Go Report Card](https://goreportcard.com/badge/github.com/cybozu-go/usocksd)](https://goreportcard.com/report/github.com/cybozu-go/usocksd)
+[![License](https://img.shields.io/github/license/cybozu-go/usocksd.svg?maxAge=2592000)](LICENSE)
 
-Micro SOCKS5 server
-===================
+Micro SOCKS server
+==================
 
-**usocksd** is a SOCKS5 server written in Go.
-It is based on [armon/go-socks5][armon] server framework.
+**usocksd** is a SOCKS server written in Go.
+
+[`usocksd/socks`](https://godoc.org/github.com/cybozu-go/usocksd/socks)
+is a general purpose SOCKS server library.  usocksd is built on it.
 
 Features
 --------
+
+* Support for SOCKS4, SOCKS4a, SOCK5
+
+    * Only CONNECT is supported (BIND and UDP associate is missing).
+
+* Graceful stop & restart
+
+    * On SIGINT/SIGTERM, usocksd stops gracefully.
+    * On SIGHUP, usocksd restarts gracefully.
+
+* Access log
+
+    Thanks to [`cybozu-go/log`](https://github.com/cybozu-go/log),
+    usocksd can output access logs in structured formats including
+    JSON.
 
 * Multiple external IP addresses
 
@@ -30,24 +50,25 @@ Features
 
     usocksd can block connections to specific TCP ports, too.
 
+Install
+-------
+
+Use Go 1.7 or better.
+
+```
+go get -u github.com/cybozu-go/usocksd/...
+```
+
 Usage
 -----
 
 `usocksd [-h] [-f CONFIG]`
 
-The default configuration file path is `/usr/local/etc/usocksd.toml`.
+The default configuration file path is `/etc/usocksd.toml`.
 
-usocksd does not have *daemon* mode.  Use systemd or upstart to
-run it on your background.
+In addition, `usocksd` implements [the common spec](https://github.com/cybozu-go/cmd#specifications) from [`cybozu-go/cmd`](https://github.com/cybozu-go/cmd).
 
-Install
--------
-
-Use Go 1.5 or better.
-
-```
-go get github.com/cybozu-go/usocksd/cmd/usocksd
-```
+usocksd does not have *daemon* mode.  Use systemd to run it on your background.
 
 Configuration file format
 -------------------------
@@ -57,8 +78,9 @@ All fields are optional.
 
 ```
 [log]
-file = "/path/to/file"
-level = "info"                     # crit, error, warn, info, debug
+filename = "/path/to/file"         # default to stderr.
+level = "info"                     # critical, error, warning, info, debug
+format = "plain"                   # plain, logfmt, json
 
 [incoming]
 port = 1080
@@ -90,7 +112,6 @@ License
 
 [MIT](https://opensource.org/licenses/MIT)
 
-[armon]: https://github.com/armon/go-socks5/
 [DNSBL]: https://en.wikipedia.org/wiki/DNSBL
 [TOML]: https://github.com/toml-lang/toml
 [godoc]: https://godoc.org/github.com/cybozu-go/usocksd
