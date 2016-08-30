@@ -9,14 +9,8 @@ func TestEmptyConfig(t *testing.T) {
 	t.Parallel()
 
 	c := NewConfig()
-	if len(c.Log.File) != 0 {
-		t.Error(c.Log.File)
-	}
-	if c.Log.Level != DefaultLogLevel {
-		t.Error("default log level != " + DefaultLogLevel)
-	}
-	if c.Incoming.Port != DefaultPort {
-		t.Errorf("default port != %d", DefaultPort)
+	if c.Incoming.Port != defaultPort {
+		t.Errorf("default port != %d", defaultPort)
 	}
 	if len(c.Outgoing.Addresses) != 0 {
 		t.Error("outgoing.addresses must be empty")
@@ -32,12 +26,6 @@ func TestConfig(t *testing.T) {
 	c := NewConfig()
 	if err := c.Load("test/test1.toml"); err != nil {
 		t.Fatal(err)
-	}
-	if c.Log.File != "/path/to/file" {
-		t.Error("log.file is not correct")
-	}
-	if c.Log.Level != "info" {
-		t.Error("log.level is not correct")
 	}
 	if c.Incoming.Port != 1080 {
 		t.Error("incoming.port != 1080")

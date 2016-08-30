@@ -1,45 +1,46 @@
 package usocksd
 
 import (
-	"strconv"
+	"net"
 
-	socks5 "github.com/cybozu-go/go-socks5"
 	"github.com/cybozu-go/log"
-	"golang.org/x/net/context"
+	"github.com/cybozu-go/usocksd/socks"
 )
 
 type ruleSet struct {
 	*Config
 }
 
-func (r ruleSet) Allow(ctx context.Context, req *socks5.Request) (context.Context, bool) {
-	if req.Command != socks5.ConnectCommand {
-		return ctx, false
-	}
-	if !r.allowFQDN(req.DestAddr.FQDN) {
+func (ru ruleSet) Match(r *socks.Request) bool {
+	clientAddr := r.Conn.RemoteAddr()
+	tca, ok := clientAddr.(*net.TCPAddr)
+
+	if !ru.allowFQDN(r.Hostname) {
 		log.Warn("denied access", map[string]interface{}{
-			"_client_ip": req.RemoteAddr.IP.String(),
-			"_fqdn":      req.DestAddr.FQDN,
+			"client_addr": clientAddr.String(),
+			"fqdn":        r.Hostname,
 		})
-		return ctx, false
+		return false
 	}
-	if !r.allowIP(req.RemoteAddr.IP) {
+
+	if ok && !ru.allowIP(tca.IP) {
 		log.Warn("denied access", map[string]interface{}{
-			"_client_ip": req.RemoteAddr.IP.String(),
+			"client_addr": clientAddr.String(),
 		})
-		return ctx, false
+		return false
 	}
-	if !r.allowPort(req.DestAddr.Port) {
+
+	if !ru.allowPort(r.Port) {
 		log.Warn("denied access", map[string]interface{}{
-			"_client_ip": req.RemoteAddr.IP.String(),
-			"_dest_port": strconv.Itoa(req.DestAddr.Port),
+			"client_addr": clientAddr.String(),
+			"dest_port":   r.Port,
 		})
-		return ctx, false
+		return false
 	}
-	return ctx, true
+
+	return true
 }
 
-// CreateRuleSet returns a RuleSet for socks5.
-func CreateRuleSet(c *Config) socks5.RuleSet {
+func createRuleSet(c *Config) socks.RuleSet {
 	return ruleSet{c}
 }

@@ -168,6 +168,9 @@ func (s *Server) handleConnection(ctx context.Context, conn net.Conn) {
 		if hc, ok := destConn.(netutil.HalfCloser); ok {
 			hc.CloseWrite()
 		}
+		if hc, ok := conn.(netutil.HalfCloser); ok {
+			hc.CloseRead()
+		}
 		return err
 	})
 	env.Go(func(ctx context.Context) error {
@@ -176,6 +179,9 @@ func (s *Server) handleConnection(ctx context.Context, conn net.Conn) {
 		s.pool.Put(buf)
 		if hc, ok := conn.(netutil.HalfCloser); ok {
 			hc.CloseWrite()
+		}
+		if hc, ok := destConn.(netutil.HalfCloser); ok {
+			hc.CloseRead()
 		}
 		return err
 	})

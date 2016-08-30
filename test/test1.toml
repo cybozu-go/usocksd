@@ -1,7 +1,3 @@
-[log]
-file = '/path/to/file'
-level = 'info'                     # crit, error, warn, info, debug
-
 [incoming]
 port = 1080
 addresses = ['127.0.0.1']          # List of listening IP addresses

@@ -6,18 +6,14 @@ import (
 	"strings"
 
 	"github.com/BurntSushi/toml"
+	"github.com/cybozu-go/cmd"
 )
 
 const (
-	DefaultLogLevel = "info"
-	DefaultPort     = 1080
+	defaultPort = 1080
 )
 
-type LogConfig struct {
-	File  string
-	Level string
-}
-
+// IncomingConfig is a set of configurations to accept clients.
 type IncomingConfig struct {
 	Port         int
 	Addresses    []net.IP
@@ -25,6 +21,7 @@ type IncomingConfig struct {
 	allowSubnets []*net.IPNet
 }
 
+// OutgoingConfig is a set of configurations to connect to destinations.
 type OutgoingConfig struct {
 	AllowSites  []string `toml:"allow_sites"`
 	DenySites   []string `toml:"deny_sites"`
@@ -33,26 +30,28 @@ type OutgoingConfig struct {
 	DNSBLDomain string `toml:"dnsbl_domain"`
 }
 
+// Config is a struct tagged for TOML for usocksd.
 type Config struct {
-	Log      LogConfig
-	Incoming IncomingConfig
-	Outgoing OutgoingConfig
+	Log      cmd.LogConfig  `toml:"log"`
+	Incoming IncomingConfig `toml:"incoming"`
+	Outgoing OutgoingConfig `toml:"outgoing"`
 }
 
+// NewConfig creates and initializes Config.
 func NewConfig() *Config {
 	c := new(Config)
-	c.Log.Level = DefaultLogLevel
-	c.Incoming.Port = DefaultPort
+	c.Incoming.Port = defaultPort
 	return c
 }
 
+// Load loads a TOML file from path.
 func (c *Config) Load(path string) error {
-	if md, err := toml.DecodeFile(path, c); err != nil {
+	md, err := toml.DecodeFile(path, c)
+	if err != nil {
 		return err
-	} else {
-		if len(md.Undecoded()) > 0 {
-			return errors.New("Unknown config keys in " + path)
-		}
+	}
+	if len(md.Undecoded()) > 0 {
+		return errors.New("Unknown config keys in " + path)
 	}
 
 	if len(c.Incoming.AllowFrom) > 0 {
