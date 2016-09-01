@@ -112,6 +112,7 @@ License
 
 [MIT](https://opensource.org/licenses/MIT)
 
+[releases]: https://github.com/cybozu-go/usocksd/releases
 [DNSBL]: https://en.wikipedia.org/wiki/DNSBL
 [TOML]: https://github.com/toml-lang/toml
 [godoc]: https://godoc.org/github.com/cybozu-go/usocksd
