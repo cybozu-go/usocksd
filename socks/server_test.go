@@ -82,22 +82,25 @@ func TestServerBasic(t *testing.T) {
 		t.Log(string(out))
 	}
 
-	if hasIPv6() {
-		curl = exec.Command("curl", "-6", "-I", "--socks5", addr, url1)
-		out, err = curl.Output()
-		if err != nil {
-			t.Error(err)
-			t.Log(string(out))
-		}
-
-		curl = exec.Command("curl", "-6", "-I", "--socks5-hostname", addr, url1)
-		out, err = curl.Output()
-		if err != nil {
-			t.Error(err)
-			t.Log(string(out))
-		}
+	if !hasIPv6() {
+		goto DONE
 	}
 
+	curl = exec.Command("curl", "-6", "-I", "--socks5", addr, url1)
+	out, err = curl.Output()
+	if err != nil {
+		t.Error(err)
+		t.Log(string(out))
+	}
+
+	curl = exec.Command("curl", "-6", "-I", "--socks5-hostname", addr, url1)
+	out, err = curl.Output()
+	if err != nil {
+		t.Error(err)
+		t.Log(string(out))
+	}
+
+DONE:
 	env.Cancel(nil)
 	err = env.Wait()
 	if err != nil {
@@ -200,15 +203,18 @@ func TestServerAuth(t *testing.T) {
 		t.Error("authentication should fail")
 	}
 
-	if hasIPv6() {
-		curl = exec.Command("curl", "-6", "-I", "-U", "user:pass", "--socks5", addr, url1)
-		out, err = curl.CombinedOutput()
-		if err != nil {
-			t.Error(err)
-			t.Log(string(out))
-		}
+	if !hasIPv6() {
+		goto DONE
 	}
 
+	curl = exec.Command("curl", "-6", "-I", "-U", "user:pass", "--socks5", addr, url1)
+	out, err = curl.CombinedOutput()
+	if err != nil {
+		t.Error(err)
+		t.Log(string(out))
+	}
+
+DONE:
 	env.Cancel(nil)
 	err = env.Wait()
 	if err != nil {
@@ -273,15 +279,25 @@ func TestServerRules(t *testing.T) {
 		t.Error("SOCKS5 w/o hostname should be denied")
 	}
 
-	if hasIPv6() {
-		curl = exec.Command("curl", "-6", "-I", "--socks5-hostname", addr, url1)
-		out, err = curl.CombinedOutput()
-		if err != nil {
-			t.Error(err)
-			t.Log(string(out))
-		}
+	curl = exec.Command("curl", "-4", "-I", "--socks5-hostname", addr, url1)
+	out, err = curl.CombinedOutput()
+	if err != nil {
+		t.Error(err)
+		t.Log(string(out))
 	}
 
+	if !hasIPv6() {
+		goto DONE
+	}
+
+	curl = exec.Command("curl", "-6", "-I", "--socks5-hostname", addr, url1)
+	out, err = curl.CombinedOutput()
+	if err != nil {
+		t.Error(err)
+		t.Log(string(out))
+	}
+
+DONE:
 	env.Cancel(nil)
 	err = env.Wait()
 	if err != nil {
