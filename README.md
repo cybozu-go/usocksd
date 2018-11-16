@@ -1,6 +1,6 @@
 [![GitHub release](https://img.shields.io/github/release/cybozu-go/usocksd.svg?maxAge=60)][releases]
 [![GoDoc](https://godoc.org/github.com/cybozu-go/usocksd?status.svg)][godoc]
-[![Build Status](https://travis-ci.org/cybozu-go/usocksd.svg?branch=master)](https://travis-ci.org/cybozu-go/usocksd)
+[![CircleCI](https://circleci.com/gh/cybozu-go/usocksd.svg?style=svg)](https://circleci.com/gh/cybozu-go/usocksd)
 [![Go Report Card](https://goreportcard.com/badge/github.com/cybozu-go/usocksd)](https://goreportcard.com/report/github.com/cybozu-go/usocksd)
 [![License](https://img.shields.io/github/license/cybozu-go/usocksd.svg?maxAge=2592000)](LICENSE)
 
