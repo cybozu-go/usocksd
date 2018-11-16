@@ -6,14 +6,14 @@ import (
 	"io"
 	"net"
 
-	"github.com/cybozu-go/cmd"
 	"github.com/cybozu-go/log"
+	"github.com/cybozu-go/well"
 )
 
 func (s *Server) handleSOCKS4(ctx context.Context, conn net.Conn, cmdByte byte) net.Conn {
 	var responseData [8]byte
 	responseData[1] = byte(Status4Rejected)
-	fields := cmd.FieldsFromContext(ctx)
+	fields := well.FieldsFromContext(ctx)
 	fields[log.FnType] = "access"
 	fields[log.FnProtocol] = SOCKS4.String()
 	fields["client_addr"] = conn.RemoteAddr().String()

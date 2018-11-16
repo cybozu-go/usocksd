@@ -66,7 +66,7 @@ Usage
 
 The default configuration file path is `/etc/usocksd.toml`.
 
-In addition, `usocksd` implements [the common spec](https://github.com/cybozu-go/cmd#specifications) from [`cybozu-go/cmd`](https://github.com/cybozu-go/cmd).
+In addition, `usocksd` implements [the common spec](https://github.com/cybozu-go/well#specifications) from [`cybozu-go/well`](https://github.com/cybozu-go/well).
 
 usocksd does not have *daemon* mode.  Use systemd to run it on your background.
 

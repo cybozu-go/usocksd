@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/BurntSushi/toml"
-	"github.com/cybozu-go/cmd"
+	"github.com/cybozu-go/well"
 )
 
 const (
@@ -32,7 +32,7 @@ type OutgoingConfig struct {
 
 // Config is a struct tagged for TOML for usocksd.
 type Config struct {
-	Log      cmd.LogConfig  `toml:"log"`
+	Log      well.LogConfig `toml:"log"`
 	Incoming IncomingConfig `toml:"incoming"`
 	Outgoing OutgoingConfig `toml:"outgoing"`
 }

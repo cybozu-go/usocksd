@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cybozu-go/cmd"
+	"github.com/cybozu-go/well"
 )
 
 func hasIPv6() bool {
@@ -33,7 +33,7 @@ func TestServerBasic(t *testing.T) {
 	}
 
 	addr := "localhost:20080"
-	env := cmd.NewEnvironment(context.Background())
+	env := well.NewEnvironment(context.Background())
 	s := &Server{
 		Env: env,
 	}
@@ -129,7 +129,7 @@ func TestServerAuth(t *testing.T) {
 	}
 
 	addr := "localhost:20082"
-	env := cmd.NewEnvironment(context.Background())
+	env := well.NewEnvironment(context.Background())
 	s := &Server{
 		Auth: authenticator{},
 		Env:  env,
@@ -238,7 +238,7 @@ func TestServerRules(t *testing.T) {
 	}
 
 	addr := "localhost:20084"
-	env := cmd.NewEnvironment(context.Background())
+	env := well.NewEnvironment(context.Background())
 	s := &Server{
 		Rules: rules{},
 		Env:   env,
@@ -314,7 +314,7 @@ func TestServerError(t *testing.T) {
 	}
 
 	addr := "localhost:20086"
-	env := cmd.NewEnvironment(context.Background())
+	env := well.NewEnvironment(context.Background())
 	s := &Server{
 		Env: env,
 	}

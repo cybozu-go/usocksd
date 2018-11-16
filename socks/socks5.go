@@ -6,9 +6,9 @@ import (
 	"io"
 	"net"
 
-	"github.com/cybozu-go/cmd"
 	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/netutil"
+	"github.com/cybozu-go/well"
 )
 
 func (s *Server) handleSOCKS5(ctx context.Context, conn net.Conn, nauth byte) net.Conn {
@@ -31,7 +31,7 @@ func (s *Server) handleSOCKS5(ctx context.Context, conn net.Conn, nauth byte) ne
 	}
 
 	response := makeSOCKS5Response(r)
-	fields := cmd.FieldsFromContext(ctx)
+	fields := well.FieldsFromContext(ctx)
 	fields[log.FnType] = "access"
 	fields[log.FnProtocol] = SOCKS5.String()
 	fields["client_addr"] = conn.RemoteAddr().String()
@@ -99,7 +99,7 @@ func hasAuth(t authType, methods []byte) bool {
 
 func (s *Server) negotiateAuth(r *Request, nauth int) bool {
 	logError := func(msg string, err error) {
-		fields := cmd.FieldsFromContext(r.ctx)
+		fields := well.FieldsFromContext(r.ctx)
 		fields[log.FnType] = "access"
 		fields[log.FnProtocol] = SOCKS5.String()
 		fields["client_addr"] = r.Conn.RemoteAddr().String()
@@ -216,7 +216,7 @@ FAIL:
 
 func (s *Server) readAddress(r *Request) bool {
 	logError := func(msg string, err error) {
-		fields := cmd.FieldsFromContext(r.ctx)
+		fields := well.FieldsFromContext(r.ctx)
 		fields[log.FnType] = "access"
 		fields[log.FnProtocol] = SOCKS5.String()
 		fields["client_addr"] = r.Conn.RemoteAddr().String()

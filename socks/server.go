@@ -8,9 +8,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cybozu-go/cmd"
 	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/netutil"
+	"github.com/cybozu-go/well"
 )
 
 const (
@@ -72,10 +72,10 @@ type Server struct {
 	// Env is the environment where this server runs.
 	//
 	// The global environment is used if Env is nil.
-	Env *cmd.Environment
+	Env *well.Environment
 
 	once   sync.Once
-	server cmd.Server
+	server well.Server
 	pool   *sync.Pool
 }
 
@@ -95,7 +95,7 @@ func (s *Server) init() {
 
 // Serve starts a goroutine to accept connections.
 // This returns immediately.  l will be closed when s.Env is canceled.
-// See https://godoc.org/github.com/cybozu-go/cmd#Server.Serve
+// See https://godoc.org/github.com/cybozu-go/well#Server.Serve
 func (s *Server) Serve(l net.Listener) {
 	s.once.Do(s.init)
 	s.server.Serve(l)
@@ -125,7 +125,7 @@ func (s *Server) handleConnection(ctx context.Context, conn net.Conn) {
 	var preamble [2]byte
 	_, err := io.ReadFull(conn, preamble[:])
 	if err != nil {
-		fields := cmd.FieldsFromContext(ctx)
+		fields := well.FieldsFromContext(ctx)
 		fields["client_addr"] = conn.RemoteAddr().String()
 		fields[log.FnError] = err.Error()
 		s.Logger.Error("failed to read preamble", fields)
@@ -146,7 +146,7 @@ func (s *Server) handleConnection(ctx context.Context, conn net.Conn) {
 			return
 		}
 	default:
-		fields := cmd.FieldsFromContext(ctx)
+		fields := well.FieldsFromContext(ctx)
 		fields["client_addr"] = conn.RemoteAddr().String()
 		s.Logger.Error("unknown SOCKS version", fields)
 		return
@@ -160,7 +160,7 @@ func (s *Server) handleConnection(ctx context.Context, conn net.Conn) {
 
 	// do proxy
 	st := time.Now()
-	env := cmd.NewEnvironment(ctx)
+	env := well.NewEnvironment(ctx)
 	env.Go(func(ctx context.Context) error {
 		buf := s.pool.Get().([]byte)
 		_, err := io.CopyBuffer(destConn, conn, buf)
@@ -188,7 +188,7 @@ func (s *Server) handleConnection(ctx context.Context, conn net.Conn) {
 	env.Stop()
 	err = env.Wait()
 
-	fields := cmd.FieldsFromContext(ctx)
+	fields := well.FieldsFromContext(ctx)
 	fields["elapsed"] = time.Since(st).Seconds()
 	if err != nil {
 		fields[log.FnError] = err.Error()
