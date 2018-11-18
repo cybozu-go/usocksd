@@ -5,9 +5,9 @@ import (
 	"net"
 	"os"
 
-	"github.com/cybozu-go/cmd"
 	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/usocksd"
+	"github.com/cybozu-go/well"
 )
 
 const (
@@ -23,8 +23,8 @@ func serve(lns []net.Listener, c *usocksd.Config) {
 	for _, ln := range lns {
 		socksServer.Serve(ln)
 	}
-	err := cmd.Wait()
-	if err != nil && !cmd.IsSignaled(err) {
+	err := well.Wait()
+	if err != nil && !well.IsSignaled(err) {
 		log.ErrorExit(err)
 	}
 }
@@ -50,7 +50,7 @@ func main() {
 		log.ErrorExit(err)
 	}
 
-	g := &cmd.Graceful{
+	g := &well.Graceful{
 		Listen: func() ([]net.Listener, error) {
 			return usocksd.Listeners(c)
 		},
@@ -60,8 +60,8 @@ func main() {
 	}
 	g.Run()
 
-	err = cmd.Wait()
-	if err != nil && !cmd.IsSignaled(err) {
+	err = well.Wait()
+	if err != nil && !well.IsSignaled(err) {
 		log.ErrorExit(err)
 	}
 }

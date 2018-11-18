@@ -1,6 +1,6 @@
 [![GitHub release](https://img.shields.io/github/release/cybozu-go/usocksd.svg?maxAge=60)][releases]
 [![GoDoc](https://godoc.org/github.com/cybozu-go/usocksd?status.svg)][godoc]
-[![Build Status](https://travis-ci.org/cybozu-go/usocksd.svg?branch=master)](https://travis-ci.org/cybozu-go/usocksd)
+[![CircleCI](https://circleci.com/gh/cybozu-go/usocksd.svg?style=svg)](https://circleci.com/gh/cybozu-go/usocksd)
 [![Go Report Card](https://goreportcard.com/badge/github.com/cybozu-go/usocksd)](https://goreportcard.com/report/github.com/cybozu-go/usocksd)
 [![License](https://img.shields.io/github/license/cybozu-go/usocksd.svg?maxAge=2592000)](LICENSE)
 
@@ -66,7 +66,7 @@ Usage
 
 The default configuration file path is `/etc/usocksd.toml`.
 
-In addition, `usocksd` implements [the common spec](https://github.com/cybozu-go/cmd#specifications) from [`cybozu-go/cmd`](https://github.com/cybozu-go/cmd).
+In addition, `usocksd` implements [the common spec](https://github.com/cybozu-go/well#specifications) from [`cybozu-go/well`](https://github.com/cybozu-go/well).
 
 usocksd does not have *daemon* mode.  Use systemd to run it on your background.
 
