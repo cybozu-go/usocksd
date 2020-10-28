@@ -74,6 +74,9 @@ type Server struct {
 	// The global environment is used if Env is nil.
 	Env *well.Environment
 
+	// SilenceLogs changes Info-level logs to Debug-level ones.
+	SilenceLogs bool
+
 	once   sync.Once
 	server well.Server
 	pool   *sync.Pool
@@ -195,5 +198,9 @@ func (s *Server) handleConnection(ctx context.Context, conn net.Conn) {
 		s.Logger.Error("proxy ends with an error", fields)
 		return
 	}
-	s.Logger.Info("proxy ends", fields)
+	if s.SilenceLogs {
+		s.Logger.Debug("proxy ends", fields)
+	} else {
+		s.Logger.Info("proxy ends", fields)
+	}
 }
