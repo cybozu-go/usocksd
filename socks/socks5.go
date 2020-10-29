@@ -84,7 +84,11 @@ func (s *Server) handleSOCKS5(ctx context.Context, conn net.Conn, nauth byte) ne
 
 	fields["dest_addr"] = destConn.RemoteAddr().String()
 	fields["src_addr"] = destConn.LocalAddr().String()
-	s.Logger.Info("proxy starts", fields)
+	if s.SilenceLogs {
+		s.Logger.Debug("proxy starts", fields)
+	} else {
+		s.Logger.Info("proxy starts", fields)
+	}
 	return destConn
 }
 
