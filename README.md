@@ -30,6 +30,14 @@ Features
     usocksd can output access logs in structured formats including
     JSON.
 
+* Specific network interface
+
+    usocksd can be configured to use specific network interface
+    for outgoing connections.
+
+    It is extremely useful if you want to send all traffic to VPN/Wireguard device
+    or you have multiple network cards.
+
 * Multiple external IP addresses
 
     usocksd can be configured to use multiple external IP addresses
@@ -98,6 +106,7 @@ deny_sites = [                     # List of FQDN to be denied.
     "",                            # "" matches non-FQDN (IP) requests.
 ]
 deny_ports = [22, 25]              # Black list of outbound ports
+iface = tun0                       # Outgoing traffic binds to specific network interface
 addresses = ["12.34.56.78"]        # List of source IP addresses
 dnsbl_domain = "some.dnsbl.org"    # to exclude black listed IP addresses
 ```
