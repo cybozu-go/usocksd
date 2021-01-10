@@ -83,9 +83,14 @@ func bindControl(ifaceName string) controlFn {
 			}
 		}
 
-		return c.Control(func(fd uintptr) {
-			syscall.BindToDevice(int(fd), ifaceName)
+		var bindErr error
+		callErr := c.Control(func(fd uintptr) {
+			bindErr = syscall.BindToDevice(int(fd), ifaceName)
 		})
+		if callErr != nil {
+			return callErr
+		}
+		return bindErr
 	}
 }
 
