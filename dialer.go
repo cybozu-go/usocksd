@@ -5,6 +5,7 @@ import (
 	"hash/fnv"
 	"net"
 	"strconv"
+	"syscall"
 	"time"
 
 	"github.com/cybozu-go/usocksd/socks"
@@ -70,6 +71,29 @@ func (d dialer) Dial(r *socks.Request) (net.Conn, error) {
 	return nil, err
 }
 
+type controlFn = func(network, address string, c syscall.RawConn) error
+
+func bindControl(ifaceName string) controlFn {
+	return func(network, address string, c syscall.RawConn) error {
+		ipStr, _, err := net.SplitHostPort(address)
+		if err == nil {
+			ip := net.ParseIP(ipStr)
+			if ip != nil && !ip.IsGlobalUnicast() {
+				return nil
+			}
+		}
+
+		var bindErr error
+		callErr := c.Control(func(fd uintptr) {
+			bindErr = syscall.BindToDevice(int(fd), ifaceName)
+		})
+		if callErr != nil {
+			return callErr
+		}
+		return bindErr
+	}
+}
+
 type dumbDialer struct {
 	*net.Dialer
 }
@@ -85,6 +109,16 @@ func (d dumbDialer) Dial(r *socks.Request) (net.Conn, error) {
 }
 
 func createDialer(c *Config) socks.Dialer {
+	if c.Outgoing.IFace != "" {
+		return dumbDialer{
+			&net.Dialer{
+				KeepAlive: 3 * time.Minute,
+				DualStack: true,
+				Control:   bindControl(c.Outgoing.IFace),
+			},
+		}
+	}
+
 	if len(c.Outgoing.Addresses) == 0 {
 		return dumbDialer{
 			&net.Dialer{

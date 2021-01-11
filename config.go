@@ -26,6 +26,7 @@ type OutgoingConfig struct {
 	AllowSites  []string `toml:"allow_sites"`
 	DenySites   []string `toml:"deny_sites"`
 	DenyPorts   []int    `toml:"deny_ports"`
+	IFace       string   `toml:"iface"`
 	Addresses   []net.IP
 	DNSBLDomain string `toml:"dnsbl_domain"`
 }
