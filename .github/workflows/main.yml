@@ -1,0 +1,54 @@
+name: main
+on:
+  pull_request:
+  push:
+    branches:
+    - 'master'
+env:
+  go-version: 1.18
+jobs:
+  fmt:
+    name: Fmt
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-go@v3
+      with:
+        go-version: ${{ env.go-version }}
+    - run: test -z "$(gofmt -s -l . | grep -v '^vendor' | tee /dev/stderr)"
+  lint:
+    name: Lint
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-go@v3
+      with:
+        go-version: ${{ env.go-version }}
+    - run: golint -set_exit_status .
+  build:
+    name: Build
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-go@v3
+      with:
+        go-version: ${{ env.go-version }}
+    - run: go build ./...
+  test:
+    name: Test
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-go@v3
+      with:
+        go-version: ${{ env.go-version }}
+    - run: NO_PROXY= go test -race -v -coverprofile cover.out ./...
+  vet:
+    name: Vet
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-go@v3
+      with:
+        go-version: ${{ env.go-version }}
+    - run: go vet ./...

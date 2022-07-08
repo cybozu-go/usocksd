@@ -28,6 +28,3 @@ _testmain.go
 *.exe
 *.test
 *.prof
-
-# Ignore go.sum
-/go.sum
