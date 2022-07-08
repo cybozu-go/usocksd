@@ -4,6 +4,7 @@ import (
 	"net"
 	"strconv"
 
+	"github.com/cybozu-go/usocksd/metrics"
 	"github.com/cybozu-go/usocksd/socks"
 )
 
@@ -32,10 +33,21 @@ func Listeners(c *Config) ([]net.Listener, error) {
 	return lns, nil
 }
 
+// MetricsListener returns a listener for the metrics server.
+func MetricsListener(c *Config) (net.Listener, error) {
+	addr := net.JoinHostPort("0.0.0.0", strconv.Itoa(c.Incoming.MetricsPort))
+	return net.Listen("tcp", addr)
+}
+
 // NewServer creates a new socks.Server.
 func NewServer(c *Config) *socks.Server {
 	return &socks.Server{
 		Rules:  createRuleSet(c),
 		Dialer: createDialer(c),
 	}
+}
+
+// NewMetricsServer creates a new metrics.Server.
+func NewMetricsServer(c *Config) *metrics.Server {
+	return &metrics.Server{}
 }

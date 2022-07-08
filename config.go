@@ -10,12 +10,14 @@ import (
 )
 
 const (
-	defaultPort = 1080
+	defaultPort        = 1080
+	defaultMetricsPort = 1081
 )
 
 // IncomingConfig is a set of configurations to accept clients.
 type IncomingConfig struct {
 	Port         int
+	MetricsPort  int
 	Addresses    []net.IP
 	AllowFrom    []string `toml:"allow_from"`
 	allowSubnets []*net.IPNet
@@ -42,6 +44,7 @@ type Config struct {
 func NewConfig() *Config {
 	c := new(Config)
 	c.Incoming.Port = defaultPort
+	c.Incoming.MetricsPort = defaultMetricsPort
 	return c
 }
 

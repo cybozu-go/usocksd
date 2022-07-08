@@ -28,3 +28,4 @@ _testmain.go
 *.exe
 *.test
 *.prof
+*.out
