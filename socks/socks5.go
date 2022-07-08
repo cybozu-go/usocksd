@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"io"
 	"net"
+	"strings"
 
 	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/netutil"
@@ -45,6 +46,9 @@ func (s *Server) handleSOCKS5(ctx context.Context, conn net.Conn, nauth byte) ne
 	errFunc := func(msg string) net.Conn {
 		conn.Write(response)
 		s.Logger.Error(msg, fields)
+		rawStatus := socks5ResponseStatus(response[1])
+		status := strings.ReplaceAll(rawStatus.String(), " ", "_")
+		socksResponseCounter.WithLabelValues("socks5", status).Inc()
 		return nil
 	}
 
@@ -84,6 +88,8 @@ func (s *Server) handleSOCKS5(ctx context.Context, conn net.Conn, nauth byte) ne
 
 	fields["dest_addr"] = destConn.RemoteAddr().String()
 	fields["src_addr"] = destConn.LocalAddr().String()
+	socksResponseCounter.WithLabelValues("socks5", Status5Granted.String()).Inc()
+	proxyRequestsInflightGauge.Add(1)
 	if s.SilenceLogs {
 		s.Logger.Debug("proxy starts", fields)
 	} else {

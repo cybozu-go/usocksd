@@ -192,12 +192,16 @@ func (s *Server) handleConnection(ctx context.Context, conn net.Conn) {
 	err = env.Wait()
 
 	fields := well.FieldsFromContext(ctx)
-	fields["elapsed"] = time.Since(st).Seconds()
+	elapsed := time.Since(st).Seconds()
+	fields["elapsed"] = elapsed
+	proxyRequestsInflightGauge.Sub(1)
 	if err != nil {
 		fields[log.FnError] = err.Error()
 		s.Logger.Error("proxy ends with an error", fields)
+		proxyElapsedHist.WithLabelValues("error").Observe(elapsed)
 		return
 	}
+	proxyElapsedHist.WithLabelValues("success").Observe(elapsed)
 	if s.SilenceLogs {
 		s.Logger.Debug("proxy ends", fields)
 	} else {
