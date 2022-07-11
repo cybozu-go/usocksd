@@ -143,3 +143,7 @@ func (s socks5ResponseStatus) String() string {
 	}
 	return ""
 }
+
+const (
+	logFieldType = "access"
+)

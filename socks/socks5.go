@@ -26,14 +26,14 @@ func (s *Server) handleSOCKS5(ctx context.Context, conn net.Conn, nauth byte) ne
 	}
 
 	if s.Logger.Enabled(log.LvDebug) {
-		s.Logger.Debug("request info", map[string]interface{}{
+		_ = s.Logger.Debug("request info", map[string]interface{}{
 			"request": r,
 		})
 	}
 
 	response := makeSOCKS5Response(r)
 	fields := well.FieldsFromContext(ctx)
-	fields[log.FnType] = "access"
+	fields[log.FnType] = logFieldType
 	fields[log.FnProtocol] = SOCKS5.String()
 	fields["client_addr"] = conn.RemoteAddr().String()
 	fields["command"] = r.Command.String()
@@ -44,8 +44,8 @@ func (s *Server) handleSOCKS5(ctx context.Context, conn net.Conn, nauth byte) ne
 	}
 
 	errFunc := func(msg string) net.Conn {
-		conn.Write(response)
-		s.Logger.Error(msg, fields)
+		_, _ = conn.Write(response)
+		_ = s.Logger.Error(msg, fields)
 		rawStatus := socks5ResponseStatus(response[1])
 		status := strings.ReplaceAll(rawStatus.String(), " ", "_")
 		socksResponseCounter.WithLabelValues("socks5", status).Inc()
@@ -91,9 +91,9 @@ func (s *Server) handleSOCKS5(ctx context.Context, conn net.Conn, nauth byte) ne
 	socksResponseCounter.WithLabelValues("socks5", Status5Granted.String()).Inc()
 	proxyRequestsInflightGauge.Add(1)
 	if s.SilenceLogs {
-		s.Logger.Debug("proxy starts", fields)
+		_ = s.Logger.Debug("proxy starts", fields)
 	} else {
-		s.Logger.Info("proxy starts", fields)
+		_ = s.Logger.Info("proxy starts", fields)
 	}
 	return destConn
 }
@@ -110,13 +110,13 @@ func hasAuth(t authType, methods []byte) bool {
 func (s *Server) negotiateAuth(r *Request, nauth int) bool {
 	logError := func(msg string, err error) {
 		fields := well.FieldsFromContext(r.ctx)
-		fields[log.FnType] = "access"
+		fields[log.FnType] = logFieldType
 		fields[log.FnProtocol] = SOCKS5.String()
 		fields["client_addr"] = r.Conn.RemoteAddr().String()
 		if err != nil {
 			fields[log.FnError] = err.Error()
 		}
-		s.Logger.Error(msg, fields)
+		_ = s.Logger.Error(msg, fields)
 	}
 
 	methods := make([]byte, nauth)
@@ -144,12 +144,12 @@ func (s *Server) negotiateAuth(r *Request, nauth int) bool {
 		var preamble [2]byte
 		_, err = io.ReadFull(r.Conn, preamble[:])
 		if err != nil {
-			r.Conn.Write(response[:])
+			_, _ = r.Conn.Write(response[:])
 			logError("failed to read username/password", err)
 			return false
 		}
 		if preamble[0] != 0x01 {
-			r.Conn.Write(response[:])
+			_, _ = r.Conn.Write(response[:])
 			logError("invalid auth version", nil)
 			return false
 		}
@@ -159,7 +159,7 @@ func (s *Server) negotiateAuth(r *Request, nauth int) bool {
 			username := make([]byte, usernameLength)
 			_, err := io.ReadFull(r.Conn, username)
 			if err != nil {
-				r.Conn.Write(response[:])
+				_, _ = r.Conn.Write(response[:])
 				logError("failed to read username", err)
 				return false
 			}
@@ -169,7 +169,7 @@ func (s *Server) negotiateAuth(r *Request, nauth int) bool {
 		var oneByte [1]byte
 		_, err = io.ReadFull(r.Conn, oneByte[:])
 		if err != nil {
-			r.Conn.Write(response[:])
+			_, _ = r.Conn.Write(response[:])
 			logError("failed to read password length", err)
 			return false
 		}
@@ -177,7 +177,7 @@ func (s *Server) negotiateAuth(r *Request, nauth int) bool {
 			password := make([]byte, oneByte[0])
 			_, err := io.ReadFull(r.Conn, password)
 			if err != nil {
-				r.Conn.Write(response[:])
+				_, _ = r.Conn.Write(response[:])
 				logError("failed to read password", err)
 				return false
 			}
@@ -185,7 +185,7 @@ func (s *Server) negotiateAuth(r *Request, nauth int) bool {
 		}
 
 		if s.Auth != nil && !s.Auth.Authenticate(r) {
-			r.Conn.Write(response[:])
+			_, _ = r.Conn.Write(response[:])
 			logError("authentication failure", nil)
 			return false
 		}
@@ -219,7 +219,7 @@ func (s *Server) negotiateAuth(r *Request, nauth int) bool {
 	// unacceptable authentication method
 FAIL:
 	response[1] = 0xff
-	r.Conn.Write(response[:])
+	_, _ = r.Conn.Write(response[:])
 	logError("no acceptable auth methods", nil)
 	return false
 }
@@ -227,13 +227,13 @@ FAIL:
 func (s *Server) readAddress(r *Request) bool {
 	logError := func(msg string, err error) {
 		fields := well.FieldsFromContext(r.ctx)
-		fields[log.FnType] = "access"
+		fields[log.FnType] = logFieldType
 		fields[log.FnProtocol] = SOCKS5.String()
 		fields["client_addr"] = r.Conn.RemoteAddr().String()
 		if err != nil {
 			fields[log.FnError] = err.Error()
 		}
-		s.Logger.Error(msg, fields)
+		_ = s.Logger.Error(msg, fields)
 	}
 
 	var addrData [4]byte

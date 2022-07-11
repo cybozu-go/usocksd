@@ -49,7 +49,9 @@ func TestServerBasic(t *testing.T) {
 		Addr:    ":20081",
 		Handler: mux,
 	}
-	go hs.ListenAndServe()
+	go func() {
+		_ = hs.ListenAndServe()
+	}()
 
 	time.Sleep(10 * time.Millisecond)
 
@@ -146,7 +148,9 @@ func TestServerAuth(t *testing.T) {
 		Addr:    ":20083",
 		Handler: mux,
 	}
-	go hs.ListenAndServe()
+	go func() {
+		_ = hs.ListenAndServe()
+	}()
 
 	time.Sleep(10 * time.Millisecond)
 
@@ -192,13 +196,13 @@ func TestServerAuth(t *testing.T) {
 	}
 
 	curl = exec.Command("curl", "-4", "-I", "-U", "user:", "--socks5", addr, url1)
-	out, err = curl.CombinedOutput()
+	_, err = curl.CombinedOutput()
 	if err == nil {
 		t.Error("authentication should fail")
 	}
 
 	curl = exec.Command("curl", "-4", "-I", "-U", "user:bad", "--socks5", addr, url1)
-	out, err = curl.CombinedOutput()
+	_, err = curl.CombinedOutput()
 	if err == nil {
 		t.Error("authentication should fail")
 	}
@@ -255,7 +259,9 @@ func TestServerRules(t *testing.T) {
 		Addr:    ":20085",
 		Handler: mux,
 	}
-	go hs.ListenAndServe()
+	go func() {
+		_ = hs.ListenAndServe()
+	}()
 
 	time.Sleep(10 * time.Millisecond)
 

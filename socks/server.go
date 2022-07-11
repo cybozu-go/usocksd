@@ -123,7 +123,7 @@ func (s *Server) dial(ctx context.Context, r *Request, network string) (net.Conn
 
 // handleConnection implements SOCKS protocol.
 func (s *Server) handleConnection(ctx context.Context, conn net.Conn) {
-	conn.SetDeadline(time.Now().Add(negotiationTimeout))
+	_ = conn.SetDeadline(time.Now().Add(negotiationTimeout))
 
 	var preamble [2]byte
 	_, err := io.ReadFull(conn, preamble[:])
@@ -131,7 +131,7 @@ func (s *Server) handleConnection(ctx context.Context, conn net.Conn) {
 		fields := well.FieldsFromContext(ctx)
 		fields["client_addr"] = conn.RemoteAddr().String()
 		fields[log.FnError] = err.Error()
-		s.Logger.Error("failed to read preamble", fields)
+		_ = s.Logger.Error("failed to read preamble", fields)
 		return
 	}
 
@@ -151,7 +151,7 @@ func (s *Server) handleConnection(ctx context.Context, conn net.Conn) {
 	default:
 		fields := well.FieldsFromContext(ctx)
 		fields["client_addr"] = conn.RemoteAddr().String()
-		s.Logger.Error("unknown SOCKS version", fields)
+		_ = s.Logger.Error("unknown SOCKS version", fields)
 		return
 	}
 	defer destConn.Close()
@@ -159,7 +159,7 @@ func (s *Server) handleConnection(ctx context.Context, conn net.Conn) {
 
 	// negotiation completed.
 	var zeroTime time.Time
-	conn.SetDeadline(zeroTime)
+	_ = conn.SetDeadline(zeroTime)
 
 	// do proxy
 	st := time.Now()
@@ -169,10 +169,10 @@ func (s *Server) handleConnection(ctx context.Context, conn net.Conn) {
 		_, err := io.CopyBuffer(destConn, conn, buf)
 		s.pool.Put(buf)
 		if hc, ok := destConn.(netutil.HalfCloser); ok {
-			hc.CloseWrite()
+			_ = hc.CloseWrite()
 		}
 		if hc, ok := conn.(netutil.HalfCloser); ok {
-			hc.CloseRead()
+			_ = hc.CloseRead()
 		}
 		return err
 	})
@@ -181,10 +181,10 @@ func (s *Server) handleConnection(ctx context.Context, conn net.Conn) {
 		_, err := io.CopyBuffer(conn, destConn, buf)
 		s.pool.Put(buf)
 		if hc, ok := conn.(netutil.HalfCloser); ok {
-			hc.CloseWrite()
+			_ = hc.CloseWrite()
 		}
 		if hc, ok := destConn.(netutil.HalfCloser); ok {
-			hc.CloseRead()
+			_ = hc.CloseRead()
 		}
 		return err
 	})
@@ -197,14 +197,14 @@ func (s *Server) handleConnection(ctx context.Context, conn net.Conn) {
 	proxyRequestsInflightGauge.Sub(1)
 	if err != nil {
 		fields[log.FnError] = err.Error()
-		s.Logger.Error("proxy ends with an error", fields)
+		_ = s.Logger.Error("proxy ends with an error", fields)
 		proxyElapsedHist.WithLabelValues("error").Observe(elapsed)
 		return
 	}
 	proxyElapsedHist.WithLabelValues("success").Observe(elapsed)
 	if s.SilenceLogs {
-		s.Logger.Debug("proxy ends", fields)
+		_ = s.Logger.Debug("proxy ends", fields)
 	} else {
-		s.Logger.Info("proxy ends", fields)
+		_ = s.Logger.Info("proxy ends", fields)
 	}
 }

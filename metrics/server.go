@@ -64,5 +64,5 @@ func (s *Server) init() {
 // See https://godoc.org/github.com/cybozu-go/well#Server.Serve
 func (s *Server) Serve(ln net.Listener) {
 	s.once.Do(s.init)
-	s.server.Serve(ln)
+	_ = s.server.Serve(ln)
 }

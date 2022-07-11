@@ -16,7 +16,7 @@ func (ru ruleSet) Match(r *socks.Request) bool {
 	tca, ok := clientAddr.(*net.TCPAddr)
 
 	if !ru.allowFQDN(r.Hostname) {
-		log.Warn("denied access", map[string]interface{}{
+		_ = log.Warn("denied access", map[string]interface{}{
 			"client_addr": clientAddr.String(),
 			"fqdn":        r.Hostname,
 		})
@@ -24,14 +24,14 @@ func (ru ruleSet) Match(r *socks.Request) bool {
 	}
 
 	if ok && !ru.allowIP(tca.IP) {
-		log.Warn("denied access", map[string]interface{}{
+		_ = log.Warn("denied access", map[string]interface{}{
 			"client_addr": clientAddr.String(),
 		})
 		return false
 	}
 
 	if !ru.allowPort(r.Port) {
-		log.Warn("denied access", map[string]interface{}{
+		_ = log.Warn("denied access", map[string]interface{}{
 			"client_addr": clientAddr.String(),
 			"dest_port":   r.Port,
 		})
