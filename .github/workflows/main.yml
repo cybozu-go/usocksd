@@ -24,7 +24,7 @@ jobs:
     - uses: actions/setup-go@v3
       with:
         go-version: ${{ env.go-version }}
-    - run: golint -set_exit_status .
+    - uses: golangci/golangci-lint-action@v3
   build:
     name: Build
     runs-on: ubuntu-20.04
