@@ -43,6 +43,18 @@ var (
 		Name:      "error_copy_dest",
 		Help:      "number of errors encountered copying from destination to source",
 	})
+	proxySrcCopyElapsedHist = promauto.With(metrics.Registry).NewHistogram(prometheus.HistogramOpts{
+		Namespace: metrics.Namespace,
+		Subsystem: "proxy",
+		Name:      "copy_src_elapsed",
+		Help:      "time spent copying from source to destination",
+	})
+	proxyDestCopyElapsedHist = promauto.With(metrics.Registry).NewHistogram(prometheus.HistogramOpts{
+		Namespace: metrics.Namespace,
+		Subsystem: "proxy",
+		Name:      "copy_dest_elapsed",
+		Help:      "time spent copying from destination to source",
+	})
 
 	socksResponseCounter = promauto.With(metrics.Registry).NewCounterVec(prometheus.CounterOpts{
 		Namespace: metrics.Namespace,

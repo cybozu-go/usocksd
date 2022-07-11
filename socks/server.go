@@ -165,6 +165,7 @@ func (s *Server) handleConnection(ctx context.Context, conn net.Conn) {
 	st := time.Now()
 	env := well.NewEnvironment(ctx)
 	env.Go(func(ctx context.Context) error {
+		sst := time.Now()
 		buf := s.pool.Get().([]byte)
 		b, err := io.CopyBuffer(destConn, conn, buf)
 		s.pool.Put(buf)
@@ -174,6 +175,8 @@ func (s *Server) handleConnection(ctx context.Context, conn net.Conn) {
 		if hc, ok := conn.(netutil.HalfCloser); ok {
 			_ = hc.CloseRead()
 		}
+		elapsed := time.Since(sst).Seconds()
+		proxySrcCopyElapsedHist.Observe(elapsed)
 		proxyBytesTxHist.Observe(float64(b))
 		if err != nil {
 			proxyErrSrcCopyCount.Inc()
@@ -181,6 +184,7 @@ func (s *Server) handleConnection(ctx context.Context, conn net.Conn) {
 		return err
 	})
 	env.Go(func(ctx context.Context) error {
+		sst := time.Now()
 		buf := s.pool.Get().([]byte)
 		b, err := io.CopyBuffer(conn, destConn, buf)
 		s.pool.Put(buf)
@@ -190,6 +194,8 @@ func (s *Server) handleConnection(ctx context.Context, conn net.Conn) {
 		if hc, ok := destConn.(netutil.HalfCloser); ok {
 			_ = hc.CloseRead()
 		}
+		elapsed := time.Since(sst).Seconds()
+		proxyDestCopyElapsedHist.Observe(elapsed)
 		proxyBytesRxHist.Observe(float64(b))
 		if err != nil {
 			proxyErrDestCopyCount.Inc()
