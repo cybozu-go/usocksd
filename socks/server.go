@@ -166,25 +166,33 @@ func (s *Server) handleConnection(ctx context.Context, conn net.Conn) {
 	env := well.NewEnvironment(ctx)
 	env.Go(func(ctx context.Context) error {
 		buf := s.pool.Get().([]byte)
-		_, err := io.CopyBuffer(destConn, conn, buf)
+		b, err := io.CopyBuffer(destConn, conn, buf)
 		s.pool.Put(buf)
 		if hc, ok := destConn.(netutil.HalfCloser); ok {
 			_ = hc.CloseWrite()
 		}
 		if hc, ok := conn.(netutil.HalfCloser); ok {
 			_ = hc.CloseRead()
+		}
+		proxyBytesTxHist.Observe(float64(b))
+		if err != nil {
+			proxyErrSrcCopyCount.Inc()
 		}
 		return err
 	})
 	env.Go(func(ctx context.Context) error {
 		buf := s.pool.Get().([]byte)
-		_, err := io.CopyBuffer(conn, destConn, buf)
+		b, err := io.CopyBuffer(conn, destConn, buf)
 		s.pool.Put(buf)
 		if hc, ok := conn.(netutil.HalfCloser); ok {
 			_ = hc.CloseWrite()
 		}
 		if hc, ok := destConn.(netutil.HalfCloser); ok {
 			_ = hc.CloseRead()
+		}
+		proxyBytesRxHist.Observe(float64(b))
+		if err != nil {
+			proxyErrDestCopyCount.Inc()
 		}
 		return err
 	})
