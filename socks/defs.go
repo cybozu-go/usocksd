@@ -127,7 +127,7 @@ func (s socks5ResponseStatus) String() string {
 	case Status5Failure:
 		return "failure"
 	case Status5DeniedByRuleset:
-		return "now allowed"
+		return "not allowed"
 	case Status5NetworkUnreachable:
 		return "network unreachable"
 	case Status5HostUnreachable:
