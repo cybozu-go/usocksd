@@ -48,7 +48,7 @@ func (s *Server) handleSOCKS5(ctx context.Context, conn net.Conn, nauth byte) ne
 		_ = s.Logger.Error(msg, fields)
 		rawStatus := socks5ResponseStatus(response[1])
 		status := strings.ReplaceAll(rawStatus.String(), " ", "_")
-		socksResponseCounter.WithLabelValues("socks5", status).Inc()
+		socksResponseCounter.WithLabelValues(SOCKS5.String(), status, msg).Inc()
 		return nil
 	}
 
@@ -88,7 +88,7 @@ func (s *Server) handleSOCKS5(ctx context.Context, conn net.Conn, nauth byte) ne
 
 	fields["dest_addr"] = destConn.RemoteAddr().String()
 	fields["src_addr"] = destConn.LocalAddr().String()
-	socksResponseCounter.WithLabelValues("socks5", Status5Granted.String()).Inc()
+	socksResponseCounter.WithLabelValues(SOCKS5.String(), Status5Granted.String(), "").Inc()
 	proxyRequestsInflightGauge.Add(1)
 	if s.SilenceLogs {
 		_ = s.Logger.Debug("proxy starts", fields)
@@ -108,6 +108,7 @@ func hasAuth(t authType, methods []byte) bool {
 }
 
 func (s *Server) negotiateAuth(r *Request, nauth int) bool {
+	var chosenAuthMethod string
 	logError := func(msg string, err error) {
 		fields := well.FieldsFromContext(r.ctx)
 		fields[log.FnType] = logFieldType
@@ -117,6 +118,7 @@ func (s *Server) negotiateAuth(r *Request, nauth int) bool {
 			fields[log.FnError] = err.Error()
 		}
 		_ = s.Logger.Error(msg, fields)
+		authNegotiateFailureCounter.WithLabelValues(chosenAuthMethod, msg).Inc()
 	}
 
 	methods := make([]byte, nauth)
@@ -130,6 +132,7 @@ func (s *Server) negotiateAuth(r *Request, nauth int) bool {
 	response[0] = byte(SOCKS5)
 
 	if hasAuth(AuthBasic, methods) {
+		chosenAuthMethod = AuthBasic.String()
 		response[1] = byte(AuthBasic)
 		_, err = r.Conn.Write(response[:])
 		if err != nil {
@@ -197,10 +200,12 @@ func (s *Server) negotiateAuth(r *Request, nauth int) bool {
 			return false
 		}
 
+		authNegotiateSuccessCounter.WithLabelValues(chosenAuthMethod).Inc()
 		return true
 	}
 
 	if hasAuth(AuthNo, methods) {
+		chosenAuthMethod = AuthNo.String()
 		if s.Auth != nil && !s.Auth.Authenticate(r) {
 			// No authentication method still need to be checked
 			// by s.Auth if given.
@@ -213,6 +218,7 @@ func (s *Server) negotiateAuth(r *Request, nauth int) bool {
 			logError("failed to negotiate auth method", err)
 			return false
 		}
+		authNegotiateSuccessCounter.WithLabelValues(chosenAuthMethod).Inc()
 		return true
 	}
 
@@ -234,6 +240,7 @@ func (s *Server) readAddress(r *Request) bool {
 			fields[log.FnError] = err.Error()
 		}
 		_ = s.Logger.Error(msg, fields)
+		addressReadFailureCounter.WithLabelValues(msg).Inc()
 	}
 
 	var addrData [4]byte
@@ -294,6 +301,7 @@ func (s *Server) readAddress(r *Request) bool {
 	}
 	r.Port = int(binary.BigEndian.Uint16(portData[:]))
 
+	addressReadSuccessCounter.Inc()
 	return true
 }
 

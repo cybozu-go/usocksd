@@ -56,10 +56,36 @@ var (
 		Help:      "time spent copying from destination to source",
 	})
 
+	authNegotiateFailureCounter = promauto.With(metrics.Registry).NewCounterVec(prometheus.CounterOpts{
+		Namespace: metrics.Namespace,
+		Subsystem: "auth",
+		Name:      "negotiate_failure",
+		Help:      "auth negotiation failures",
+	}, []string{"type", "reason"})
+	authNegotiateSuccessCounter = promauto.With(metrics.Registry).NewCounterVec(prometheus.CounterOpts{
+		Namespace: metrics.Namespace,
+		Subsystem: "socks5",
+		Name:      "auth_negotiate_success",
+		Help:      "auth negotiation successes",
+	}, []string{"type"})
+
+	addressReadFailureCounter = promauto.With(metrics.Registry).NewCounterVec(prometheus.CounterOpts{
+		Namespace: metrics.Namespace,
+		Subsystem: "socks5",
+		Name:      "address_read_failure",
+		Help:      "address read failures",
+	}, []string{"reason"})
+	addressReadSuccessCounter = promauto.With(metrics.Registry).NewCounter(prometheus.CounterOpts{
+		Namespace: metrics.Namespace,
+		Subsystem: "socks5",
+		Name:      "address_read_success",
+		Help:      "address read successes",
+	})
+
 	socksResponseCounter = promauto.With(metrics.Registry).NewCounterVec(prometheus.CounterOpts{
 		Namespace: metrics.Namespace,
 		Subsystem: "socks",
 		Name:      "response",
 		Help:      "socks responses",
-	}, []string{"version", "status"})
+	}, []string{"version", "status", "reason"})
 )
