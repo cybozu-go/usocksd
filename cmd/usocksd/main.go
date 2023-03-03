@@ -25,6 +25,7 @@ func serveMetrics(c *usocksd.Config) {
 		_ = log.Warn("could not initialize metrics server, but will proceed without it", map[string]interface{}{
 			"error": err.Error(),
 		})
+		return
 	}
 	metricsServer.Serve(mln)
 }
