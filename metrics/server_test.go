@@ -2,7 +2,7 @@ package metrics
 
 import (
 	"context"
-	"io/ioutil"
+	"io"
 	"net"
 	"net/http"
 	"strings"
@@ -38,7 +38,7 @@ func TestMetricsServer(t *testing.T) {
 		t.Error(err)
 	}
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		t.Error(err)
 	}
