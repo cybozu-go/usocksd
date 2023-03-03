@@ -58,7 +58,7 @@ var (
 
 	authNegotiateFailureCounter = promauto.With(metrics.Registry).NewCounterVec(prometheus.CounterOpts{
 		Namespace: metrics.Namespace,
-		Subsystem: "auth",
+		Subsystem: "socks5",
 		Name:      "negotiate_failure",
 		Help:      "auth negotiation failures",
 	}, []string{"type", "reason"})
