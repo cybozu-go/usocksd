@@ -1,6 +1,7 @@
 package usocksd
 
 import (
+	"fmt"
 	"net"
 	"strconv"
 
@@ -35,7 +36,7 @@ func Listeners(c *Config) ([]net.Listener, error) {
 
 // MetricsListener returns a listener for the metrics server.
 func MetricsListener(c *Config) (net.Listener, error) {
-	addr := net.JoinHostPort("0.0.0.0", strconv.Itoa(c.Incoming.MetricsPort))
+	addr := fmt.Sprintf(":%d", c.Incoming.MetricsPort)
 	return net.Listen("tcp", addr)
 }
 
