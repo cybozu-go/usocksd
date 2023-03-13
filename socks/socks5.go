@@ -12,6 +12,14 @@ import (
 	"github.com/cybozu-go/well"
 )
 
+const (
+	authResultOk     = "ok"
+	authResultFailed = "failed"
+
+	addressReadOk     = "ok"
+	addressReadFailed = "failed"
+)
+
 func (s *Server) handleSOCKS5(ctx context.Context, conn net.Conn, nauth byte) net.Conn {
 	r := &Request{
 		Version: SOCKS5,
@@ -118,7 +126,7 @@ func (s *Server) negotiateAuth(r *Request, nauth int) bool {
 			fields[log.FnError] = err.Error()
 		}
 		_ = s.Logger.Error(msg, fields)
-		authNegotiateFailureCounter.WithLabelValues(chosenAuthMethod, msg).Inc()
+		authNegotiateCounter.WithLabelValues(chosenAuthMethod, msg, authResultFailed).Inc()
 	}
 
 	methods := make([]byte, nauth)
@@ -200,7 +208,7 @@ func (s *Server) negotiateAuth(r *Request, nauth int) bool {
 			return false
 		}
 
-		authNegotiateSuccessCounter.WithLabelValues(chosenAuthMethod).Inc()
+		authNegotiateCounter.WithLabelValues(chosenAuthMethod, "", authResultOk).Inc()
 		return true
 	}
 
@@ -218,7 +226,7 @@ func (s *Server) negotiateAuth(r *Request, nauth int) bool {
 			logError("failed to negotiate auth method", err)
 			return false
 		}
-		authNegotiateSuccessCounter.WithLabelValues(chosenAuthMethod).Inc()
+		authNegotiateCounter.WithLabelValues(chosenAuthMethod, "", authResultOk).Inc()
 		return true
 	}
 
@@ -240,7 +248,7 @@ func (s *Server) readAddress(r *Request) bool {
 			fields[log.FnError] = err.Error()
 		}
 		_ = s.Logger.Error(msg, fields)
-		addressReadFailureCounter.WithLabelValues(msg).Inc()
+		addressReadCounter.WithLabelValues(msg, addressReadFailed).Inc()
 	}
 
 	var addrData [4]byte
@@ -301,7 +309,7 @@ func (s *Server) readAddress(r *Request) bool {
 	}
 	r.Port = int(binary.BigEndian.Uint16(portData[:]))
 
-	addressReadSuccessCounter.Inc()
+	addressReadCounter.WithLabelValues("", addressReadOk).Inc()
 	return true
 }
 

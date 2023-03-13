@@ -10,82 +10,60 @@ var (
 	proxyElapsedHist = promauto.With(metrics.Registry).NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: metrics.Namespace,
 		Subsystem: "proxy",
-		Name:      "elapsed",
+		Name:      "process_seconds",
 		Help:      "provides the time elapsed, in seconds, between proxy start and end",
 	}, []string{"result"})
 	proxyRequestsInflightGauge = promauto.With(metrics.Registry).NewGauge(prometheus.GaugeOpts{
 		Namespace: metrics.Namespace,
 		Subsystem: "proxy",
-		Name:      "requests_inflight",
+		Name:      "inflight_requests",
 		Help:      "provides the number of requests currently in-flight",
 	})
 	proxyBytesTxHist = promauto.With(metrics.Registry).NewHistogram(prometheus.HistogramOpts{
 		Namespace: metrics.Namespace,
 		Subsystem: "proxy",
-		Name:      "bytes_tx",
+		Name:      "tx_bytes",
 		Help:      "bytes copied from the source connection to the destination connection",
 	})
 	proxyBytesRxHist = promauto.With(metrics.Registry).NewHistogram(prometheus.HistogramOpts{
 		Namespace: metrics.Namespace,
 		Subsystem: "proxy",
-		Name:      "bytes_rx",
+		Name:      "rx_bytes",
 		Help:      "bytes copied from the destination connection to the source connection",
 	})
-	proxyErrSrcCopyCount = promauto.With(metrics.Registry).NewCounter(prometheus.CounterOpts{
-		Namespace: metrics.Namespace,
-		Subsystem: "proxy",
-		Name:      "error_copy_src",
-		Help:      "number of errors encountered copying from source to destination",
-	})
-	proxyErrDestCopyCount = promauto.With(metrics.Registry).NewCounter(prometheus.CounterOpts{
-		Namespace: metrics.Namespace,
-		Subsystem: "proxy",
-		Name:      "error_copy_dest",
-		Help:      "number of errors encountered copying from destination to source",
-	})
-	proxySrcCopyElapsedHist = promauto.With(metrics.Registry).NewHistogram(prometheus.HistogramOpts{
-		Namespace: metrics.Namespace,
-		Subsystem: "proxy",
-		Name:      "copy_src_elapsed",
-		Help:      "time spent copying from source to destination",
-	})
-	proxyDestCopyElapsedHist = promauto.With(metrics.Registry).NewHistogram(prometheus.HistogramOpts{
-		Namespace: metrics.Namespace,
-		Subsystem: "proxy",
-		Name:      "copy_dest_elapsed",
-		Help:      "time spent copying from destination to source",
-	})
 
-	authNegotiateFailureCounter = promauto.With(metrics.Registry).NewCounterVec(prometheus.CounterOpts{
+	proxyCopyErrCount = promauto.With(metrics.Registry).NewCounterVec(prometheus.CounterOpts{
 		Namespace: metrics.Namespace,
-		Subsystem: "socks5",
-		Name:      "negotiate_failure",
-		Help:      "auth negotiation failures",
-	}, []string{"type", "reason"})
-	authNegotiateSuccessCounter = promauto.With(metrics.Registry).NewCounterVec(prometheus.CounterOpts{
-		Namespace: metrics.Namespace,
-		Subsystem: "socks5",
-		Name:      "auth_negotiate_success",
-		Help:      "auth negotiation successes",
-	}, []string{"type"})
+		Subsystem: "proxy",
+		Name:      "copy_errors_total",
+		Help:      "number of errors encountered copying from source/destination to destination/source",
+	}, []string{"from"})
 
-	addressReadFailureCounter = promauto.With(metrics.Registry).NewCounterVec(prometheus.CounterOpts{
+	proxyCopyElapsedHist = promauto.With(metrics.Registry).NewHistogramVec(prometheus.HistogramOpts{
+		Namespace: metrics.Namespace,
+		Subsystem: "proxy",
+		Name:      "copy_seconds",
+		Help:      "time spent copying from source/destination to destination/source",
+	}, []string{"from"})
+
+	authNegotiateCounter = promauto.With(metrics.Registry).NewCounterVec(prometheus.CounterOpts{
 		Namespace: metrics.Namespace,
 		Subsystem: "socks5",
-		Name:      "address_read_failure",
-		Help:      "address read failures",
-	}, []string{"reason"})
-	addressReadSuccessCounter = promauto.With(metrics.Registry).NewCounter(prometheus.CounterOpts{
+		Name:      "auth_negotiated_total",
+		Help:      "number of auth negotiation",
+	}, []string{"type", "reason", "result"})
+
+	addressReadCounter = promauto.With(metrics.Registry).NewCounterVec(prometheus.CounterOpts{
 		Namespace: metrics.Namespace,
 		Subsystem: "socks5",
-		Name:      "address_read_success",
-		Help:      "address read successes",
-	})
+		Name:      "address_read_total",
+		Help:      "address read total count",
+	}, []string{"reason", "result"})
 
 	socksResponseCounter = promauto.With(metrics.Registry).NewCounterVec(prometheus.CounterOpts{
 		Namespace: metrics.Namespace,
 		Subsystem: "socks",
-		Name:      "response",
-		Help:      "socks responses",
+		Name:      "responses_total",
+		Help:      "number of socks responses",
 	}, []string{"version", "status", "reason"})
 )
