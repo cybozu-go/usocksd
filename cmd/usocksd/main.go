@@ -25,8 +25,7 @@ func serveMetrics(c *usocksd.Config) error {
 	if err != nil {
 		return fmt.Errorf("could not initialize metrics server: %w", err)
 	}
-	metricsServer.Serve(mln)
-	return nil
+	return metricsServer.Serve(mln)
 }
 
 func serve(lns []net.Listener, c *usocksd.Config) {

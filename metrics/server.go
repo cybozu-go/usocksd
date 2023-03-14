@@ -62,7 +62,7 @@ func (s *Server) init() {
 // Serve starts a goroutine to accept connections.
 // This returns immediately.  l will be closed when s.Env is canceled.
 // See https://godoc.org/github.com/cybozu-go/well#Server.Serve
-func (s *Server) Serve(ln net.Listener) {
+func (s *Server) Serve(ln net.Listener) error {
 	s.once.Do(s.init)
-	_ = s.server.Serve(ln)
+	return s.server.Serve(ln)
 }
