@@ -10,7 +10,7 @@ var (
 	proxyElapsedHist = promauto.With(metrics.Registry).NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: metrics.Namespace,
 		Subsystem: "proxy",
-		Name:      "process_seconds",
+		Name:      "elapsed_seconds",
 		Help:      "provides the time elapsed, in seconds, between proxy start and end",
 	}, []string{"result"})
 	proxyRequestsInflightGauge = promauto.With(metrics.Registry).NewGauge(prometheus.GaugeOpts{
@@ -32,19 +32,33 @@ var (
 		Help:      "bytes copied from the destination connection to the source connection",
 	})
 
-	proxyCopyErrCount = promauto.With(metrics.Registry).NewCounterVec(prometheus.CounterOpts{
+	proxyErrTxCount = promauto.With(metrics.Registry).NewCounter(prometheus.CounterOpts{
 		Namespace: metrics.Namespace,
 		Subsystem: "proxy",
-		Name:      "copy_errors_total",
-		Help:      "number of errors encountered copying from source/destination to destination/source",
-	}, []string{"from"})
+		Name:      "tx_errors_total",
+		Help:      "number of errors encountered copying from source to destination",
+	})
 
-	proxyCopyElapsedHist = promauto.With(metrics.Registry).NewHistogramVec(prometheus.HistogramOpts{
+	proxyErrRxCount = promauto.With(metrics.Registry).NewCounter(prometheus.CounterOpts{
 		Namespace: metrics.Namespace,
 		Subsystem: "proxy",
-		Name:      "copy_seconds",
-		Help:      "time spent copying from source/destination to destination/source",
-	}, []string{"from"})
+		Name:      "rx_errors_total",
+		Help:      "number of errors encountered copying from destination to source",
+	})
+
+	proxyElapsedTxHist = promauto.With(metrics.Registry).NewHistogram(prometheus.HistogramOpts{
+		Namespace: metrics.Namespace,
+		Subsystem: "proxy",
+		Name:      "tx_seconds",
+		Help:      "time spent copying from source to destination",
+	})
+
+	proxyElapsedRxHist = promauto.With(metrics.Registry).NewHistogram(prometheus.HistogramOpts{
+		Namespace: metrics.Namespace,
+		Subsystem: "proxy",
+		Name:      "rx_seconds",
+		Help:      "time spent copying from destination to source",
+	})
 
 	authNegotiateCounter = promauto.With(metrics.Registry).NewCounterVec(prometheus.CounterOpts{
 		Namespace: metrics.Namespace,

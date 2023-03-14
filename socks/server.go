@@ -176,10 +176,10 @@ func (s *Server) handleConnection(ctx context.Context, conn net.Conn) {
 			_ = hc.CloseRead()
 		}
 		elapsed := time.Since(sst).Seconds()
-		proxyCopyElapsedHist.WithLabelValues("src").Observe(elapsed)
+		proxyElapsedTxHist.Observe(elapsed)
 		proxyBytesTxHist.Observe(float64(b))
 		if err != nil {
-			proxyCopyErrCount.WithLabelValues("src").Inc()
+			proxyErrTxCount.Inc()
 		}
 		return err
 	})
@@ -195,10 +195,10 @@ func (s *Server) handleConnection(ctx context.Context, conn net.Conn) {
 			_ = hc.CloseRead()
 		}
 		elapsed := time.Since(sst).Seconds()
-		proxyCopyElapsedHist.WithLabelValues("dest").Observe(elapsed)
+		proxyElapsedRxHist.Observe(elapsed)
 		proxyBytesRxHist.Observe(float64(b))
 		if err != nil {
-			proxyCopyErrCount.WithLabelValues("dest").Inc()
+			proxyErrRxCount.Inc()
 		}
 		return err
 	})
