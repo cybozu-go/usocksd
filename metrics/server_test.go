@@ -22,9 +22,11 @@ func TestMetricsServer(t *testing.T) {
 	}
 	ln, err := net.Listen("tcp", ":30080")
 	if err != nil {
-		t.Skip(err)
+		t.Fatal(err)
 	}
-	s.Serve(ln)
+	if err := s.Serve(ln); err != nil {
+		t.Fatal(err)
+	}
 	dummyMetric := prometheus.NewCounter(prometheus.CounterOpts{
 		Name: "dummy_counter",
 	})
