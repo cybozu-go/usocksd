@@ -132,6 +132,7 @@ func (s *Server) handleConnection(ctx context.Context, conn net.Conn) {
 		fields["client_addr"] = conn.RemoteAddr().String()
 		fields[log.FnError] = err.Error()
 		_ = s.Logger.Error("failed to read preamble", fields)
+		connectionCounter.WithLabelValues("unknown", "invalid_request").Inc()
 		return
 	}
 
@@ -152,6 +153,7 @@ func (s *Server) handleConnection(ctx context.Context, conn net.Conn) {
 		fields := well.FieldsFromContext(ctx)
 		fields["client_addr"] = conn.RemoteAddr().String()
 		_ = s.Logger.Error("unknown SOCKS version", fields)
+		connectionCounter.WithLabelValues("unknown", "unknown_version").Inc()
 		return
 	}
 	defer destConn.Close()

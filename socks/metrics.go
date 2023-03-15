@@ -74,10 +74,9 @@ var (
 		Help:      "address read total count",
 	}, []string{"reason", "result"})
 
-	socksResponseCounter = promauto.With(metrics.Registry).NewCounterVec(prometheus.CounterOpts{
+	connectionCounter = promauto.With(metrics.Registry).NewCounterVec(prometheus.CounterOpts{
 		Namespace: metrics.Namespace,
-		Subsystem: "socks",
-		Name:      "responses_total",
-		Help:      "number of socks responses",
-	}, []string{"version", "status", "reason"})
+		Name:      "connections_total",
+		Help:      "number of TCP connections",
+	}, []string{"version", "status"})
 )
