@@ -65,14 +65,14 @@ var (
 		Subsystem: "socks5",
 		Name:      "auth_negotiated_total",
 		Help:      "number of auth negotiation",
-	}, []string{"type", "reason", "result"})
+	}, []string{"type", "result"})
 
 	addressReadCounter = promauto.With(metrics.Registry).NewCounterVec(prometheus.CounterOpts{
 		Namespace: metrics.Namespace,
 		Subsystem: "socks5",
 		Name:      "address_read_total",
 		Help:      "address read total count",
-	}, []string{"reason", "result"})
+	}, []string{"result"})
 
 	connectionCounter = promauto.With(metrics.Registry).NewCounterVec(prometheus.CounterOpts{
 		Namespace: metrics.Namespace,

@@ -126,7 +126,7 @@ func (s *Server) negotiateAuth(r *Request, nauth int) bool {
 			fields[log.FnError] = err.Error()
 		}
 		_ = s.Logger.Error(msg, fields)
-		authNegotiateCounter.WithLabelValues(chosenAuthMethod, msg, authResultFailed).Inc()
+		authNegotiateCounter.WithLabelValues(chosenAuthMethod, authResultFailed).Inc()
 	}
 
 	methods := make([]byte, nauth)
@@ -208,7 +208,7 @@ func (s *Server) negotiateAuth(r *Request, nauth int) bool {
 			return false
 		}
 
-		authNegotiateCounter.WithLabelValues(chosenAuthMethod, "", authResultOk).Inc()
+		authNegotiateCounter.WithLabelValues(chosenAuthMethod, authResultOk).Inc()
 		return true
 	}
 
@@ -226,7 +226,7 @@ func (s *Server) negotiateAuth(r *Request, nauth int) bool {
 			logError("failed to negotiate auth method", err)
 			return false
 		}
-		authNegotiateCounter.WithLabelValues(chosenAuthMethod, "", authResultOk).Inc()
+		authNegotiateCounter.WithLabelValues(chosenAuthMethod, authResultOk).Inc()
 		return true
 	}
 
@@ -248,7 +248,7 @@ func (s *Server) readAddress(r *Request) bool {
 			fields[log.FnError] = err.Error()
 		}
 		_ = s.Logger.Error(msg, fields)
-		addressReadCounter.WithLabelValues(msg, addressReadFailed).Inc()
+		addressReadCounter.WithLabelValues(addressReadFailed).Inc()
 	}
 
 	var addrData [4]byte
@@ -309,7 +309,7 @@ func (s *Server) readAddress(r *Request) bool {
 	}
 	r.Port = int(binary.BigEndian.Uint16(portData[:]))
 
-	addressReadCounter.WithLabelValues("", addressReadOk).Inc()
+	addressReadCounter.WithLabelValues(addressReadOk).Inc()
 	return true
 }
 
