@@ -125,14 +125,17 @@ func (s *Server) dial(ctx context.Context, r *Request, network string) (net.Conn
 func (s *Server) handleConnection(ctx context.Context, conn net.Conn) {
 	_ = conn.SetDeadline(time.Now().Add(negotiationTimeout))
 
-	var preamble [2]byte
+	var (
+		preamble [2]byte
+		socksVer version
+	)
 	_, err := io.ReadFull(conn, preamble[:])
 	if err != nil {
 		fields := well.FieldsFromContext(ctx)
 		fields["client_addr"] = conn.RemoteAddr().String()
 		fields[log.FnError] = err.Error()
 		_ = s.Logger.Error("failed to read preamble", fields)
-		connectionCounter.WithLabelValues("unknown", "invalid_request").Inc()
+		connectionCounter.WithLabelValues(socksVer.LabelValue(), "invalid_request").Inc()
 		return
 	}
 
@@ -140,11 +143,13 @@ func (s *Server) handleConnection(ctx context.Context, conn net.Conn) {
 	var destConn net.Conn
 	switch connVer {
 	case SOCKS4:
+		socksVer = SOCKS4
 		destConn = s.handleSOCKS4(ctx, conn, preamble[1])
 		if destConn == nil {
 			return
 		}
 	case SOCKS5:
+		socksVer = SOCKS5
 		destConn = s.handleSOCKS5(ctx, conn, preamble[1])
 		if destConn == nil {
 			return
@@ -153,7 +158,7 @@ func (s *Server) handleConnection(ctx context.Context, conn net.Conn) {
 		fields := well.FieldsFromContext(ctx)
 		fields["client_addr"] = conn.RemoteAddr().String()
 		_ = s.Logger.Error("unknown SOCKS version", fields)
-		connectionCounter.WithLabelValues("unknown", "unknown_version").Inc()
+		connectionCounter.WithLabelValues(socksVer.LabelValue(), "unknown_version").Inc()
 		return
 	}
 	defer destConn.Close()

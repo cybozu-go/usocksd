@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 	"io"
 	"net"
-	"strings"
 
 	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/well"
@@ -25,9 +24,8 @@ func (s *Server) handleSOCKS4(ctx context.Context, conn net.Conn, cmdByte byte) 
 			fields[log.FnError] = err.Error()
 		}
 		_ = s.Logger.Error(msg, fields)
-		rawStatus := socks4ResponseStatus(responseData[1])
-		status := strings.ReplaceAll(rawStatus.String(), " ", "_")
-		connectionCounter.WithLabelValues(SOCKS4.String(), status).Inc()
+		status := socks4ResponseStatus(responseData[1])
+		connectionCounter.WithLabelValues(SOCKS4.LabelValue(), status.LabelValue()).Inc()
 		return nil
 	}
 
@@ -94,7 +92,7 @@ func (s *Server) handleSOCKS4(ctx context.Context, conn net.Conn, cmdByte byte) 
 
 	fields["dest_addr"] = destConn.RemoteAddr().String()
 	fields["src_addr"] = destConn.LocalAddr().String()
-	connectionCounter.WithLabelValues(SOCKS4.String(), Status4Granted.String()).Inc()
+	connectionCounter.WithLabelValues(SOCKS4.LabelValue(), Status4Granted.LabelValue()).Inc()
 	proxyRequestsInflightGauge.Add(1)
 	if s.SilenceLogs {
 		_ = s.Logger.Debug("proxy starts", fields)

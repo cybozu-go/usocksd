@@ -20,6 +20,14 @@ func (v version) String() string {
 	return ""
 }
 
+func (v version) LabelValue() string {
+	raw := v.String()
+	if raw == "" {
+		return "unknown"
+	}
+	return strings.ReplaceAll(raw, "/", "_")
+}
+
 type commandType byte
 
 // SOCKS commands.
@@ -62,6 +70,14 @@ func (at addressType) String() string {
 	return ""
 }
 
+func (at addressType) LabelValue() string {
+	raw := at.String()
+	if raw == "" {
+		return "unknown"
+	}
+	return strings.ReplaceAll(raw, " ", "_")
+}
+
 type authType byte
 
 // SOCKS authentication types.
@@ -81,6 +97,14 @@ func (a authType) String() string {
 		return "basic"
 	}
 	return ""
+}
+
+func (a authType) LabelValue() string {
+	raw := a.String()
+	if raw == "" {
+		return "unknown"
+	}
+	return strings.ReplaceAll(raw, " ", "_")
 }
 
 type socks4ResponseStatus byte
@@ -105,6 +129,14 @@ func (s socks4ResponseStatus) String() string {
 		return "invalid user"
 	}
 	return ""
+}
+
+func (s socks4ResponseStatus) LabelValue() string {
+	raw := s.String()
+	if raw == "" {
+		return "unknown"
+	}
+	return strings.ReplaceAll(raw, " ", "_")
 }
 
 type socks5ResponseStatus byte
@@ -144,6 +176,14 @@ func (s socks5ResponseStatus) String() string {
 		return "address type not supported"
 	}
 	return ""
+}
+
+func (s socks5ResponseStatus) LabelValue() string {
+	raw := s.String()
+	if raw == "" {
+		return "unknown"
+	}
+	return strings.ReplaceAll(raw, " ", "_")
 }
 
 const (

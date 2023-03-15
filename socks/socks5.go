@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 	"io"
 	"net"
-	"strings"
 
 	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/netutil"
@@ -27,9 +26,11 @@ func (s *Server) handleSOCKS5(ctx context.Context, conn net.Conn, nauth byte) ne
 		ctx:     ctx,
 	}
 	if !s.negotiateAuth(r, int(nauth)) {
+		connectionCounter.WithLabelValues(SOCKS5.LabelValue(), "authentication_failure").Inc()
 		return nil
 	}
 	if !s.readAddress(r) {
+		connectionCounter.WithLabelValues(SOCKS5.LabelValue(), "address_read_failure").Inc()
 		return nil
 	}
 
@@ -54,9 +55,8 @@ func (s *Server) handleSOCKS5(ctx context.Context, conn net.Conn, nauth byte) ne
 	errFunc := func(msg string) net.Conn {
 		_, _ = conn.Write(response)
 		_ = s.Logger.Error(msg, fields)
-		rawStatus := socks5ResponseStatus(response[1])
-		status := strings.ReplaceAll(rawStatus.String(), " ", "_")
-		connectionCounter.WithLabelValues(SOCKS5.String(), status).Inc()
+		status := socks5ResponseStatus(response[1])
+		connectionCounter.WithLabelValues(SOCKS5.LabelValue(), status.LabelValue()).Inc()
 		return nil
 	}
 
@@ -96,7 +96,7 @@ func (s *Server) handleSOCKS5(ctx context.Context, conn net.Conn, nauth byte) ne
 
 	fields["dest_addr"] = destConn.RemoteAddr().String()
 	fields["src_addr"] = destConn.LocalAddr().String()
-	connectionCounter.WithLabelValues(SOCKS5.String(), Status5Granted.String()).Inc()
+	connectionCounter.WithLabelValues(SOCKS5.LabelValue(), Status5Granted.LabelValue()).Inc()
 	proxyRequestsInflightGauge.Add(1)
 	if s.SilenceLogs {
 		_ = s.Logger.Debug("proxy starts", fields)
@@ -116,7 +116,7 @@ func hasAuth(t authType, methods []byte) bool {
 }
 
 func (s *Server) negotiateAuth(r *Request, nauth int) bool {
-	var chosenAuthMethod string
+	var chosenAuthMethod authType
 	logError := func(msg string, err error) {
 		fields := well.FieldsFromContext(r.ctx)
 		fields[log.FnType] = logFieldType
@@ -126,7 +126,7 @@ func (s *Server) negotiateAuth(r *Request, nauth int) bool {
 			fields[log.FnError] = err.Error()
 		}
 		_ = s.Logger.Error(msg, fields)
-		authNegotiateCounter.WithLabelValues(chosenAuthMethod, authResultFailed).Inc()
+		authNegotiateCounter.WithLabelValues(chosenAuthMethod.LabelValue(), authResultFailed).Inc()
 	}
 
 	methods := make([]byte, nauth)
@@ -140,7 +140,7 @@ func (s *Server) negotiateAuth(r *Request, nauth int) bool {
 	response[0] = byte(SOCKS5)
 
 	if hasAuth(AuthBasic, methods) {
-		chosenAuthMethod = AuthBasic.String()
+		chosenAuthMethod = AuthBasic
 		response[1] = byte(AuthBasic)
 		_, err = r.Conn.Write(response[:])
 		if err != nil {
@@ -208,12 +208,12 @@ func (s *Server) negotiateAuth(r *Request, nauth int) bool {
 			return false
 		}
 
-		authNegotiateCounter.WithLabelValues(chosenAuthMethod, authResultOk).Inc()
+		authNegotiateCounter.WithLabelValues(chosenAuthMethod.LabelValue(), authResultOk).Inc()
 		return true
 	}
 
 	if hasAuth(AuthNo, methods) {
-		chosenAuthMethod = AuthNo.String()
+		chosenAuthMethod = AuthNo
 		if s.Auth != nil && !s.Auth.Authenticate(r) {
 			// No authentication method still need to be checked
 			// by s.Auth if given.
@@ -226,7 +226,7 @@ func (s *Server) negotiateAuth(r *Request, nauth int) bool {
 			logError("failed to negotiate auth method", err)
 			return false
 		}
-		authNegotiateCounter.WithLabelValues(chosenAuthMethod, authResultOk).Inc()
+		authNegotiateCounter.WithLabelValues(chosenAuthMethod.LabelValue(), authResultOk).Inc()
 		return true
 	}
 
