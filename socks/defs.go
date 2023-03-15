@@ -2,6 +2,8 @@ package socks
 
 import "strings"
 
+const UNKNOWN = "unknown"
+
 type version byte
 
 // SOCKS versions.
@@ -23,7 +25,7 @@ func (v version) String() string {
 func (v version) LabelValue() string {
 	raw := v.String()
 	if raw == "" {
-		return "unknown"
+		return UNKNOWN
 	}
 	return strings.ReplaceAll(raw, "/", "_")
 }
@@ -73,7 +75,7 @@ func (at addressType) String() string {
 func (at addressType) LabelValue() string {
 	raw := at.String()
 	if raw == "" {
-		return "unknown"
+		return UNKNOWN
 	}
 	return strings.ReplaceAll(raw, " ", "_")
 }
@@ -102,7 +104,7 @@ func (a authType) String() string {
 func (a authType) LabelValue() string {
 	raw := a.String()
 	if raw == "" {
-		return "unknown"
+		return UNKNOWN
 	}
 	return strings.ReplaceAll(raw, " ", "_")
 }
@@ -134,7 +136,7 @@ func (s socks4ResponseStatus) String() string {
 func (s socks4ResponseStatus) LabelValue() string {
 	raw := s.String()
 	if raw == "" {
-		return "unknown"
+		return UNKNOWN
 	}
 	return strings.ReplaceAll(raw, " ", "_")
 }
@@ -181,7 +183,7 @@ func (s socks5ResponseStatus) String() string {
 func (s socks5ResponseStatus) LabelValue() string {
 	raw := s.String()
 	if raw == "" {
-		return "unknown"
+		return UNKNOWN
 	}
 	return strings.ReplaceAll(raw, " ", "_")
 }
