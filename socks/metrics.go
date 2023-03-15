@@ -72,7 +72,7 @@ var (
 		Subsystem: "socks5",
 		Name:      "address_read_total",
 		Help:      "address read total count",
-	}, []string{"result"})
+	}, []string{"type", "result"})
 
 	connectionCounter = promauto.With(metrics.Registry).NewCounterVec(prometheus.CounterOpts{
 		Namespace: metrics.Namespace,

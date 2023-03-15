@@ -239,6 +239,7 @@ FAIL:
 }
 
 func (s *Server) readAddress(r *Request) bool {
+	var addrType addressType
 	logError := func(msg string, err error) {
 		fields := well.FieldsFromContext(r.ctx)
 		fields[log.FnType] = logFieldType
@@ -248,7 +249,7 @@ func (s *Server) readAddress(r *Request) bool {
 			fields[log.FnError] = err.Error()
 		}
 		_ = s.Logger.Error(msg, fields)
-		addressReadCounter.WithLabelValues(addressReadFailed).Inc()
+		addressReadCounter.WithLabelValues(addrType.LabelValue(), addressReadFailed).Inc()
 	}
 
 	var addrData [4]byte
@@ -265,6 +266,7 @@ func (s *Server) readAddress(r *Request) bool {
 
 	switch addressType(addrData[3]) {
 	case AddrIPv4:
+		addrType = AddrIPv4
 		var ipv4Data [4]byte
 		_, err := io.ReadFull(r.Conn, ipv4Data[:])
 		if err != nil {
@@ -273,6 +275,7 @@ func (s *Server) readAddress(r *Request) bool {
 		}
 		r.IP = net.IPv4(ipv4Data[0], ipv4Data[1], ipv4Data[2], ipv4Data[3])
 	case AddrIPv6:
+		addrType = AddrIPv6
 		ipv6Data := make([]byte, 16)
 		_, err := io.ReadFull(r.Conn, ipv6Data)
 		if err != nil {
@@ -281,6 +284,7 @@ func (s *Server) readAddress(r *Request) bool {
 		}
 		r.IP = net.IP(ipv6Data)
 	case AddrDomain:
+		addrType = AddrDomain
 		var nameLen [1]byte
 		_, err := io.ReadFull(r.Conn, nameLen[:])
 		if err != nil {
@@ -309,7 +313,7 @@ func (s *Server) readAddress(r *Request) bool {
 	}
 	r.Port = int(binary.BigEndian.Uint16(portData[:]))
 
-	addressReadCounter.WithLabelValues(addressReadOk).Inc()
+	addressReadCounter.WithLabelValues(addrType.LabelValue(), addressReadOk).Inc()
 	return true
 }
 

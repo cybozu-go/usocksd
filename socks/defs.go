@@ -1,5 +1,7 @@
 package socks
 
+import "strings"
+
 type version byte
 
 // SOCKS versions.
