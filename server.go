@@ -49,6 +49,6 @@ func NewServer(c *Config) *socks.Server {
 }
 
 // NewMetricsServer creates a new metrics.Server.
-func NewMetricsServer(c *Config) *metrics.Server {
+func NewMetricsServer(_ *Config) *metrics.Server {
 	return &metrics.Server{}
 }
