@@ -30,6 +30,9 @@ func TestConfig(t *testing.T) {
 	if c.Incoming.Port != 1080 {
 		t.Error("incoming.port != 1080")
 	}
+	if c.Incoming.MetricsPort != 8081 {
+		t.Error("incoming.port != 1080")
+	}
 	if len(c.Incoming.Addresses) != 1 {
 		t.Error("empty incoming.addresses")
 	} else {

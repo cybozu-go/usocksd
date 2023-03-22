@@ -17,7 +17,7 @@ const (
 // IncomingConfig is a set of configurations to accept clients.
 type IncomingConfig struct {
 	Port         int
-	MetricsPort  int
+	MetricsPort  int `toml:"metrics_port"`
 	Addresses    []net.IP
 	AllowFrom    []string `toml:"allow_from"`
 	allowSubnets []*net.IPNet

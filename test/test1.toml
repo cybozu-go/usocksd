@@ -1,5 +1,6 @@
 [incoming]
 port = 1080
+metrics_port = 8081
 addresses = ['127.0.0.1']          # List of listening IP addresses
 allow_from = ['10.0.0.0/8', '192.168.1.1']
 
