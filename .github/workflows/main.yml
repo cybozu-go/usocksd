@@ -1,0 +1,36 @@
+name: main
+on:
+  pull_request:
+  push:
+    branches:
+    - 'master'
+env:
+  go-version: 1.20.1
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-go@v3
+      with:
+        go-version: ${{ env.go-version }}
+    - uses: golangci/golangci-lint-action@v3
+  build:
+    name: Build
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-go@v3
+      with:
+        go-version: ${{ env.go-version }}
+    - run: go build -trimpath ./...
+  test:
+    name: Test
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-go@v3
+      with:
+        go-version: ${{ env.go-version }}
+    - run: NO_PROXY= go test -race -v -coverprofile cover.out ./...

@@ -61,7 +61,7 @@ Features
 Install
 -------
 
-Use Go 1.7 or better.
+Use a recent version of Go.
 
 ```
 go get -u github.com/cybozu-go/usocksd/...

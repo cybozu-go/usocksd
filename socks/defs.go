@@ -1,5 +1,9 @@
 package socks
 
+import "strings"
+
+const UNKNOWN = "unknown"
+
 type version byte
 
 // SOCKS versions.
@@ -16,6 +20,14 @@ func (v version) String() string {
 		return "SOCKS5"
 	}
 	return ""
+}
+
+func (v version) LabelValue() string {
+	raw := v.String()
+	if raw == "" {
+		return UNKNOWN
+	}
+	return strings.ReplaceAll(raw, "/", "_")
 }
 
 type commandType byte
@@ -60,6 +72,14 @@ func (at addressType) String() string {
 	return ""
 }
 
+func (at addressType) LabelValue() string {
+	raw := at.String()
+	if raw == "" {
+		return UNKNOWN
+	}
+	return strings.ReplaceAll(raw, " ", "_")
+}
+
 type authType byte
 
 // SOCKS authentication types.
@@ -79,6 +99,14 @@ func (a authType) String() string {
 		return "basic"
 	}
 	return ""
+}
+
+func (a authType) LabelValue() string {
+	raw := a.String()
+	if raw == "" {
+		return UNKNOWN
+	}
+	return strings.ReplaceAll(raw, " ", "_")
 }
 
 type socks4ResponseStatus byte
@@ -105,6 +133,14 @@ func (s socks4ResponseStatus) String() string {
 	return ""
 }
 
+func (s socks4ResponseStatus) LabelValue() string {
+	raw := s.String()
+	if raw == "" {
+		return UNKNOWN
+	}
+	return strings.ReplaceAll(raw, " ", "_")
+}
+
 type socks5ResponseStatus byte
 
 // SOCKS5 response status codes.
@@ -127,7 +163,7 @@ func (s socks5ResponseStatus) String() string {
 	case Status5Failure:
 		return "failure"
 	case Status5DeniedByRuleset:
-		return "now allowed"
+		return "not allowed"
 	case Status5NetworkUnreachable:
 		return "network unreachable"
 	case Status5HostUnreachable:
@@ -143,3 +179,15 @@ func (s socks5ResponseStatus) String() string {
 	}
 	return ""
 }
+
+func (s socks5ResponseStatus) LabelValue() string {
+	raw := s.String()
+	if raw == "" {
+		return UNKNOWN
+	}
+	return strings.ReplaceAll(raw, " ", "_")
+}
+
+const (
+	logFieldType = "access"
+)

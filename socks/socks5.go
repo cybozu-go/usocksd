@@ -11,6 +11,14 @@ import (
 	"github.com/cybozu-go/well"
 )
 
+const (
+	authResultOk     = "ok"
+	authResultFailed = "failed"
+
+	addressReadOk     = "ok"
+	addressReadFailed = "failed"
+)
+
 func (s *Server) handleSOCKS5(ctx context.Context, conn net.Conn, nauth byte) net.Conn {
 	r := &Request{
 		Version: SOCKS5,
@@ -18,21 +26,23 @@ func (s *Server) handleSOCKS5(ctx context.Context, conn net.Conn, nauth byte) ne
 		ctx:     ctx,
 	}
 	if !s.negotiateAuth(r, int(nauth)) {
+		connectionCounter.WithLabelValues(SOCKS5.LabelValue(), "authentication_failure").Inc()
 		return nil
 	}
 	if !s.readAddress(r) {
+		connectionCounter.WithLabelValues(SOCKS5.LabelValue(), "address_read_failure").Inc()
 		return nil
 	}
 
 	if s.Logger.Enabled(log.LvDebug) {
-		s.Logger.Debug("request info", map[string]interface{}{
+		_ = s.Logger.Debug("request info", map[string]interface{}{
 			"request": r,
 		})
 	}
 
 	response := makeSOCKS5Response(r)
 	fields := well.FieldsFromContext(ctx)
-	fields[log.FnType] = "access"
+	fields[log.FnType] = logFieldType
 	fields[log.FnProtocol] = SOCKS5.String()
 	fields["client_addr"] = conn.RemoteAddr().String()
 	fields["command"] = r.Command.String()
@@ -43,8 +53,10 @@ func (s *Server) handleSOCKS5(ctx context.Context, conn net.Conn, nauth byte) ne
 	}
 
 	errFunc := func(msg string) net.Conn {
-		conn.Write(response)
-		s.Logger.Error(msg, fields)
+		_, _ = conn.Write(response)
+		_ = s.Logger.Error(msg, fields)
+		status := socks5ResponseStatus(response[1])
+		connectionCounter.WithLabelValues(SOCKS5.LabelValue(), status.LabelValue()).Inc()
 		return nil
 	}
 
@@ -84,10 +96,12 @@ func (s *Server) handleSOCKS5(ctx context.Context, conn net.Conn, nauth byte) ne
 
 	fields["dest_addr"] = destConn.RemoteAddr().String()
 	fields["src_addr"] = destConn.LocalAddr().String()
+	connectionCounter.WithLabelValues(SOCKS5.LabelValue(), Status5Granted.LabelValue()).Inc()
+	proxyRequestsInflightGauge.Add(1)
 	if s.SilenceLogs {
-		s.Logger.Debug("proxy starts", fields)
+		_ = s.Logger.Debug("proxy starts", fields)
 	} else {
-		s.Logger.Info("proxy starts", fields)
+		_ = s.Logger.Info("proxy starts", fields)
 	}
 	return destConn
 }
@@ -102,15 +116,17 @@ func hasAuth(t authType, methods []byte) bool {
 }
 
 func (s *Server) negotiateAuth(r *Request, nauth int) bool {
+	var chosenAuthMethod authType
 	logError := func(msg string, err error) {
 		fields := well.FieldsFromContext(r.ctx)
-		fields[log.FnType] = "access"
+		fields[log.FnType] = logFieldType
 		fields[log.FnProtocol] = SOCKS5.String()
 		fields["client_addr"] = r.Conn.RemoteAddr().String()
 		if err != nil {
 			fields[log.FnError] = err.Error()
 		}
-		s.Logger.Error(msg, fields)
+		_ = s.Logger.Error(msg, fields)
+		authNegotiateCounter.WithLabelValues(chosenAuthMethod.LabelValue(), authResultFailed).Inc()
 	}
 
 	methods := make([]byte, nauth)
@@ -124,6 +140,7 @@ func (s *Server) negotiateAuth(r *Request, nauth int) bool {
 	response[0] = byte(SOCKS5)
 
 	if hasAuth(AuthBasic, methods) {
+		chosenAuthMethod = AuthBasic
 		response[1] = byte(AuthBasic)
 		_, err = r.Conn.Write(response[:])
 		if err != nil {
@@ -138,12 +155,12 @@ func (s *Server) negotiateAuth(r *Request, nauth int) bool {
 		var preamble [2]byte
 		_, err = io.ReadFull(r.Conn, preamble[:])
 		if err != nil {
-			r.Conn.Write(response[:])
+			_, _ = r.Conn.Write(response[:])
 			logError("failed to read username/password", err)
 			return false
 		}
 		if preamble[0] != 0x01 {
-			r.Conn.Write(response[:])
+			_, _ = r.Conn.Write(response[:])
 			logError("invalid auth version", nil)
 			return false
 		}
@@ -153,7 +170,7 @@ func (s *Server) negotiateAuth(r *Request, nauth int) bool {
 			username := make([]byte, usernameLength)
 			_, err := io.ReadFull(r.Conn, username)
 			if err != nil {
-				r.Conn.Write(response[:])
+				_, _ = r.Conn.Write(response[:])
 				logError("failed to read username", err)
 				return false
 			}
@@ -163,7 +180,7 @@ func (s *Server) negotiateAuth(r *Request, nauth int) bool {
 		var oneByte [1]byte
 		_, err = io.ReadFull(r.Conn, oneByte[:])
 		if err != nil {
-			r.Conn.Write(response[:])
+			_, _ = r.Conn.Write(response[:])
 			logError("failed to read password length", err)
 			return false
 		}
@@ -171,7 +188,7 @@ func (s *Server) negotiateAuth(r *Request, nauth int) bool {
 			password := make([]byte, oneByte[0])
 			_, err := io.ReadFull(r.Conn, password)
 			if err != nil {
-				r.Conn.Write(response[:])
+				_, _ = r.Conn.Write(response[:])
 				logError("failed to read password", err)
 				return false
 			}
@@ -179,7 +196,7 @@ func (s *Server) negotiateAuth(r *Request, nauth int) bool {
 		}
 
 		if s.Auth != nil && !s.Auth.Authenticate(r) {
-			r.Conn.Write(response[:])
+			_, _ = r.Conn.Write(response[:])
 			logError("authentication failure", nil)
 			return false
 		}
@@ -191,10 +208,12 @@ func (s *Server) negotiateAuth(r *Request, nauth int) bool {
 			return false
 		}
 
+		authNegotiateCounter.WithLabelValues(chosenAuthMethod.LabelValue(), authResultOk).Inc()
 		return true
 	}
 
 	if hasAuth(AuthNo, methods) {
+		chosenAuthMethod = AuthNo
 		if s.Auth != nil && !s.Auth.Authenticate(r) {
 			// No authentication method still need to be checked
 			// by s.Auth if given.
@@ -207,27 +226,30 @@ func (s *Server) negotiateAuth(r *Request, nauth int) bool {
 			logError("failed to negotiate auth method", err)
 			return false
 		}
+		authNegotiateCounter.WithLabelValues(chosenAuthMethod.LabelValue(), authResultOk).Inc()
 		return true
 	}
 
 	// unacceptable authentication method
 FAIL:
 	response[1] = 0xff
-	r.Conn.Write(response[:])
+	_, _ = r.Conn.Write(response[:])
 	logError("no acceptable auth methods", nil)
 	return false
 }
 
 func (s *Server) readAddress(r *Request) bool {
+	var addrType addressType
 	logError := func(msg string, err error) {
 		fields := well.FieldsFromContext(r.ctx)
-		fields[log.FnType] = "access"
+		fields[log.FnType] = logFieldType
 		fields[log.FnProtocol] = SOCKS5.String()
 		fields["client_addr"] = r.Conn.RemoteAddr().String()
 		if err != nil {
 			fields[log.FnError] = err.Error()
 		}
-		s.Logger.Error(msg, fields)
+		_ = s.Logger.Error(msg, fields)
+		addressReadCounter.WithLabelValues(addrType.LabelValue(), addressReadFailed).Inc()
 	}
 
 	var addrData [4]byte
@@ -244,6 +266,7 @@ func (s *Server) readAddress(r *Request) bool {
 
 	switch addressType(addrData[3]) {
 	case AddrIPv4:
+		addrType = AddrIPv4
 		var ipv4Data [4]byte
 		_, err := io.ReadFull(r.Conn, ipv4Data[:])
 		if err != nil {
@@ -252,6 +275,7 @@ func (s *Server) readAddress(r *Request) bool {
 		}
 		r.IP = net.IPv4(ipv4Data[0], ipv4Data[1], ipv4Data[2], ipv4Data[3])
 	case AddrIPv6:
+		addrType = AddrIPv6
 		ipv6Data := make([]byte, 16)
 		_, err := io.ReadFull(r.Conn, ipv6Data)
 		if err != nil {
@@ -260,6 +284,7 @@ func (s *Server) readAddress(r *Request) bool {
 		}
 		r.IP = net.IP(ipv6Data)
 	case AddrDomain:
+		addrType = AddrDomain
 		var nameLen [1]byte
 		_, err := io.ReadFull(r.Conn, nameLen[:])
 		if err != nil {
@@ -288,6 +313,7 @@ func (s *Server) readAddress(r *Request) bool {
 	}
 	r.Port = int(binary.BigEndian.Uint16(portData[:]))
 
+	addressReadCounter.WithLabelValues(addrType.LabelValue(), addressReadOk).Inc()
 	return true
 }
 

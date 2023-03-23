@@ -14,16 +14,18 @@ func (s *Server) handleSOCKS4(ctx context.Context, conn net.Conn, cmdByte byte) 
 	var responseData [8]byte
 	responseData[1] = byte(Status4Rejected)
 	fields := well.FieldsFromContext(ctx)
-	fields[log.FnType] = "access"
+	fields[log.FnType] = logFieldType
 	fields[log.FnProtocol] = SOCKS4.String()
 	fields["client_addr"] = conn.RemoteAddr().String()
 
 	errFunc := func(msg string, err error) net.Conn {
-		conn.Write(responseData[:])
+		_, _ = conn.Write(responseData[:])
 		if err != nil {
 			fields[log.FnError] = err.Error()
 		}
-		s.Logger.Error(msg, fields)
+		_ = s.Logger.Error(msg, fields)
+		status := socks4ResponseStatus(responseData[1])
+		connectionCounter.WithLabelValues(SOCKS4.LabelValue(), status.LabelValue()).Inc()
 		return nil
 	}
 
@@ -90,10 +92,12 @@ func (s *Server) handleSOCKS4(ctx context.Context, conn net.Conn, cmdByte byte) 
 
 	fields["dest_addr"] = destConn.RemoteAddr().String()
 	fields["src_addr"] = destConn.LocalAddr().String()
+	connectionCounter.WithLabelValues(SOCKS4.LabelValue(), Status4Granted.LabelValue()).Inc()
+	proxyRequestsInflightGauge.Add(1)
 	if s.SilenceLogs {
-		s.Logger.Debug("proxy starts", fields)
+		_ = s.Logger.Debug("proxy starts", fields)
 	} else {
-		s.Logger.Info("proxy starts", fields)
+		_ = s.Logger.Info("proxy starts", fields)
 	}
 	return destConn
 }

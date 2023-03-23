@@ -123,15 +123,19 @@ func (s *Server) dial(ctx context.Context, r *Request, network string) (net.Conn
 
 // handleConnection implements SOCKS protocol.
 func (s *Server) handleConnection(ctx context.Context, conn net.Conn) {
-	conn.SetDeadline(time.Now().Add(negotiationTimeout))
+	_ = conn.SetDeadline(time.Now().Add(negotiationTimeout))
 
-	var preamble [2]byte
+	var (
+		preamble [2]byte
+		socksVer version
+	)
 	_, err := io.ReadFull(conn, preamble[:])
 	if err != nil {
 		fields := well.FieldsFromContext(ctx)
 		fields["client_addr"] = conn.RemoteAddr().String()
 		fields[log.FnError] = err.Error()
-		s.Logger.Error("failed to read preamble", fields)
+		_ = s.Logger.Error("failed to read preamble", fields)
+		connectionCounter.WithLabelValues(socksVer.LabelValue(), "invalid_request").Inc()
 		return
 	}
 
@@ -139,11 +143,13 @@ func (s *Server) handleConnection(ctx context.Context, conn net.Conn) {
 	var destConn net.Conn
 	switch connVer {
 	case SOCKS4:
+		socksVer = SOCKS4
 		destConn = s.handleSOCKS4(ctx, conn, preamble[1])
 		if destConn == nil {
 			return
 		}
 	case SOCKS5:
+		socksVer = SOCKS5
 		destConn = s.handleSOCKS5(ctx, conn, preamble[1])
 		if destConn == nil {
 			return
@@ -151,7 +157,8 @@ func (s *Server) handleConnection(ctx context.Context, conn net.Conn) {
 	default:
 		fields := well.FieldsFromContext(ctx)
 		fields["client_addr"] = conn.RemoteAddr().String()
-		s.Logger.Error("unknown SOCKS version", fields)
+		_ = s.Logger.Error("unknown SOCKS version", fields)
+		connectionCounter.WithLabelValues(socksVer.LabelValue(), "unknown_version").Inc()
 		return
 	}
 	defer destConn.Close()
@@ -159,32 +166,46 @@ func (s *Server) handleConnection(ctx context.Context, conn net.Conn) {
 
 	// negotiation completed.
 	var zeroTime time.Time
-	conn.SetDeadline(zeroTime)
+	_ = conn.SetDeadline(zeroTime)
 
 	// do proxy
 	st := time.Now()
 	env := well.NewEnvironment(ctx)
 	env.Go(func(ctx context.Context) error {
+		sst := time.Now()
 		buf := s.pool.Get().([]byte)
-		_, err := io.CopyBuffer(destConn, conn, buf)
+		b, err := io.CopyBuffer(destConn, conn, buf)
 		s.pool.Put(buf)
 		if hc, ok := destConn.(netutil.HalfCloser); ok {
-			hc.CloseWrite()
+			_ = hc.CloseWrite()
 		}
 		if hc, ok := conn.(netutil.HalfCloser); ok {
-			hc.CloseRead()
+			_ = hc.CloseRead()
+		}
+		elapsed := time.Since(sst).Seconds()
+		proxyElapsedTxHist.Observe(elapsed)
+		proxyBytesTxHist.Observe(float64(b))
+		if err != nil {
+			proxyErrTxCount.Inc()
 		}
 		return err
 	})
 	env.Go(func(ctx context.Context) error {
+		sst := time.Now()
 		buf := s.pool.Get().([]byte)
-		_, err := io.CopyBuffer(conn, destConn, buf)
+		b, err := io.CopyBuffer(conn, destConn, buf)
 		s.pool.Put(buf)
 		if hc, ok := conn.(netutil.HalfCloser); ok {
-			hc.CloseWrite()
+			_ = hc.CloseWrite()
 		}
 		if hc, ok := destConn.(netutil.HalfCloser); ok {
-			hc.CloseRead()
+			_ = hc.CloseRead()
+		}
+		elapsed := time.Since(sst).Seconds()
+		proxyElapsedRxHist.Observe(elapsed)
+		proxyBytesRxHist.Observe(float64(b))
+		if err != nil {
+			proxyErrRxCount.Inc()
 		}
 		return err
 	})
@@ -192,15 +213,19 @@ func (s *Server) handleConnection(ctx context.Context, conn net.Conn) {
 	err = env.Wait()
 
 	fields := well.FieldsFromContext(ctx)
-	fields["elapsed"] = time.Since(st).Seconds()
+	elapsed := time.Since(st).Seconds()
+	fields["elapsed"] = elapsed
+	proxyRequestsInflightGauge.Sub(1)
 	if err != nil {
 		fields[log.FnError] = err.Error()
-		s.Logger.Error("proxy ends with an error", fields)
+		_ = s.Logger.Error("proxy ends with an error", fields)
+		proxyElapsedHist.WithLabelValues("error").Observe(elapsed)
 		return
 	}
+	proxyElapsedHist.WithLabelValues("success").Observe(elapsed)
 	if s.SilenceLogs {
-		s.Logger.Debug("proxy ends", fields)
+		_ = s.Logger.Debug("proxy ends", fields)
 	} else {
-		s.Logger.Info("proxy ends", fields)
+		_ = s.Logger.Info("proxy ends", fields)
 	}
 }

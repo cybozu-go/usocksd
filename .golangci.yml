@@ -3,6 +3,9 @@ linters:
         - dupl
         - goconst
         - gofmt
-        - golint
+        - revive
         - typecheck
         - unparam
+linters-settings:
+    staticcheck:
+        checks: ["all", "-SA6002"]

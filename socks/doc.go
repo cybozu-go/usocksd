@@ -6,6 +6,5 @@ Features:
 * Username/password authentication.
 * CONNECT command (BIND and UDP ASSOCIATE is not supported).
 * Graceful stop (thanks to github.com/cybozu-go/well package).
-
 */
 package socks

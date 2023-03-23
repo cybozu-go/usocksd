@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"net"
 	"os"
 
@@ -18,13 +19,24 @@ var (
 	optFile = flag.String("f", "", "configuration file name")
 )
 
+func serveMetrics(c *usocksd.Config) error {
+	metricsServer := usocksd.NewMetricsServer(c)
+	mln, err := usocksd.MetricsListener(c)
+	if err != nil {
+		return fmt.Errorf("could not initialize metrics server: %w", err)
+	}
+	return metricsServer.Serve(mln)
+}
+
 func serve(lns []net.Listener, c *usocksd.Config) {
 	socksServer := usocksd.NewServer(c)
 	for _, ln := range lns {
 		socksServer.Serve(ln)
 	}
-	err := well.Wait()
-	if err != nil && !well.IsSignaled(err) {
+	if err := serveMetrics(c); err != nil {
+		log.ErrorExit(err)
+	}
+	if err := well.Wait(); err != nil && !well.IsSignaled(err) {
 		log.ErrorExit(err)
 	}
 }

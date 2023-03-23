@@ -70,7 +70,7 @@ func (a *AddressGroup) detectInvalid() {
 		}
 		a.lock.Lock()
 		if len(invalids) > 0 && len(a.invalids) != len(invalids) {
-			log.Warn("detect black-listed IP", map[string]interface{}{
+			_ = log.Warn("detect black-listed IP", map[string]interface{}{
 				"_bad_ips": toStringList(invalids),
 			})
 		}
