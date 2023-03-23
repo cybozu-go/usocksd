@@ -5,6 +5,7 @@ require (
 	github.com/cybozu-go/log v1.6.1
 	github.com/cybozu-go/netutil v1.4.2
 	github.com/cybozu-go/well v1.11.0
+	github.com/google/go-cmp v0.5.8
 	github.com/prometheus/client_golang v1.12.2
 )
 
