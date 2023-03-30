@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.3.0] - 2023-03-30
+### Added
+- Provide some metrics in OpenMetrics format (#14).
+
+### Changed
+- Update dependencies
+- Use GitHub Actions instead of Circle CI
+
 ## [1.2.0] - 2020-10-29
 ### Added
 - SilenceLogs option to socks.Server by @AkihiroSuda (#8)
@@ -30,7 +38,8 @@ All notable changes to this project will be documented in this file.
 [well]: https://github.com/cybozu-go/well
 [cmd]: https://github.com/cybozu-go/cmd
 [spec]: https://github.com/cybozu-go/cmd/blob/master/README.md#specifications
-[Unreleased]: https://github.com/cybozu-go/usocksd/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/cybozu-go/usocksd/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/cybozu-go/usocksd/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/cybozu-go/usocksd/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/cybozu-go/usocksd/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/cybozu-go/usocksd/compare/v0.1...v1.0.0

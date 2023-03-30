@@ -1,6 +1,6 @@
 [![GitHub release](https://img.shields.io/github/release/cybozu-go/usocksd.svg?maxAge=60)][releases]
 [![GoDoc](https://godoc.org/github.com/cybozu-go/usocksd?status.svg)][godoc]
-[![CircleCI](https://circleci.com/gh/cybozu-go/usocksd.svg?style=svg)](https://circleci.com/gh/cybozu-go/usocksd)
+[![main](https://github.com/cybozu-go/usocksd/actions/workflows/main.yml/badge.svg)](https://github.com/cybozu-go/usocksd/actions/workflows/main.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/cybozu-go/usocksd)](https://goreportcard.com/report/github.com/cybozu-go/usocksd)
 [![License](https://img.shields.io/github/license/cybozu-go/usocksd.svg?maxAge=2592000)](LICENSE)
 
@@ -92,6 +92,7 @@ format = "plain"                   # plain, logfmt, json
 
 [incoming]
 port = 1080
+metrics_port = 1081                # Port number to serve metrics
 addresses = ["127.0.0.1"]          # List of listening IP addresses
 allow_from = ["10.0.0.0/8"]        # CIDR network or IP address
 
