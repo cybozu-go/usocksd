@@ -34,3 +34,26 @@ jobs:
       with:
         go-version: ${{ env.go-version }}
     - run: NO_PROXY= go test -race -v -coverprofile cover.out ./...
+  release:
+    name: Release
+    if: github.ref == 'refs/heads/master'
+    needs:
+    - lint
+    - build
+    - test
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v3
+    - name: Create release
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        VERSION=v$(cat VERSION)
+        if git show-ref --tags | grep -q -w -F "refs/tags/${VERSION}"
+        then
+          echo "${VERSION} exists. Skipped"
+          exit 0
+        fi
+        git tag ${VERSION}
+        git push --tags
+        gh release create ${VERSION} --generate-notes
